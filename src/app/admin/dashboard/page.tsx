@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { Plus, Copy, ExternalLink, Calendar, Clock, Video, CheckCircle2, AlertCircle, Trash2, LogOut, Settings, User, X, Loader2, Send, Camera, Upload, BarChart2, Phone } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import ImageCropper from './ImageCropper';
 import { supabase } from '@/lib/supabase';
 
-export default function DashboardPage() {
+function DashboardContent() {
     const [activeTab, setActiveTab] = useState<'meetings' | 'config'>('meetings');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [meetings, setMeetings] = useState<any[]>([]);
@@ -886,5 +886,17 @@ export default function DashboardPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="animate-spin text-blue-500" size={32} />
+            </div>
+        }>
+            <DashboardContent />
+        </Suspense>
     );
 }
