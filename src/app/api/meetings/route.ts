@@ -5,10 +5,9 @@ import { getGoogleAuth, createCalendarEvent } from '@/lib/google-calendar';
 export async function POST(request: Request) {
     try {
         const meetingData = await request.json();
-        const { title, description, date, time, isGoogleMeet, custom_slug, request_phone } = meetingData;
+        const { title, description, date, time, isGoogleMeet, custom_slug, request_phone, duration } = meetingData;
 
         // 1. Get the admin settings (for the email and refresh token)
-        // For now, we assume there's only one admin/account connected
         const { data: adminSettings, error: adminError } = await supabaseAdmin
             .from('al_admin_settings')
             .select('email')
@@ -19,7 +18,40 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Admin non configuré (Google not connected)' }, { status: 400 });
         }
 
-        // 2. Insert into Supabase first to get share_id
+        // 2. Generate unique share_id (slug) if not provided or even if provided (to ensure uniqueness)
+        let shareId = custom_slug?.trim();
+
+        if (!shareId || shareId === '') {
+            // Slugify title
+            shareId = title.toLowerCase()
+                .replace(/[^a-z0-9]/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+
+            if (!shareId) shareId = 'meeting';
+        }
+
+        // Check for uniqueness and append suffix if needed
+        let finalShareId = shareId;
+        let counter = 1;
+        let isUnique = false;
+
+        while (!isUnique) {
+            const { data: existing } = await supabaseAdmin
+                .from('al_meetings')
+                .select('share_id')
+                .eq('share_id', finalShareId)
+                .maybeSingle();
+
+            if (!existing) {
+                isUnique = true;
+            } else {
+                finalShareId = `${shareId}-${counter}`;
+                counter++;
+            }
+        }
+
+        // 3. Insert into Supabase first to get id
         const insertData: any = {
             title,
             description,
@@ -27,12 +59,10 @@ export async function POST(request: Request) {
             meeting_time: time,
             is_google_meet: isGoogleMeet,
             host_email: adminSettings.email,
-            request_phone: !!request_phone
+            request_phone: !!request_phone,
+            duration: duration || 60,
+            share_id: finalShareId
         };
-
-        if (custom_slug && custom_slug.trim() !== '') {
-            insertData.share_id = custom_slug.trim();
-        }
 
         const { data: newMeeting, error: insertError } = await supabaseAdmin
             .from('al_meetings')
@@ -44,10 +74,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: insertError.message }, { status: 500 });
         }
 
-        // 3. Sync to Google Calendar
+        // 4. Sync to Google Calendar
         try {
             const auth = await getGoogleAuth(adminSettings.email);
-            const googleEvent = await createCalendarEvent(auth, meetingData);
+            const googleEvent = await createCalendarEvent(auth, { ...meetingData, duration: duration || 60 });
 
             // 4. Update Supabase with Google Event ID and Meet Link
             await supabaseAdmin

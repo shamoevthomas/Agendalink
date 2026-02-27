@@ -20,7 +20,9 @@ function DashboardContent() {
     const [description, setDescription] = useState('');
     const [isGoogleMeet, setIsGoogleMeet] = useState(true);
     const [requestPhone, setRequestPhone] = useState(false);
+    const [duration, setDuration] = useState(60);
     const [customSlug, setCustomSlug] = useState('');
+    const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
     const [initialProfile, setInitialProfile] = useState<any>(null);
 
     const searchParams = useSearchParams();
@@ -67,8 +69,22 @@ function DashboardContent() {
             const hours = String(now.getHours()).padStart(2, '0');
             const mins = String(now.getMinutes()).padStart(2, '0');
             setTime(`${hours}:${mins}`);
+
+            // Reset slug edit state
+            setIsSlugManuallyEdited(false);
         }
     }, [isModalOpen]);
+
+    // Auto-slug generation
+    useEffect(() => {
+        if (!isSlugManuallyEdited && title) {
+            const slug = title.toLowerCase()
+                .replace(/[^a-z0-9]/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+            setCustomSlug(slug);
+        }
+    }, [title, isSlugManuallyEdited]);
 
     const fetchMeetings = async () => {
         setLoading(true);
@@ -262,7 +278,8 @@ function DashboardContent() {
                     description,
                     isGoogleMeet,
                     custom_slug: customSlug,
-                    request_phone: requestPhone
+                    request_phone: requestPhone,
+                    duration: duration
                 }),
             });
 
@@ -276,6 +293,8 @@ function DashboardContent() {
                 setDescription('');
                 setCustomSlug('');
                 setRequestPhone(false);
+                setDuration(60);
+                setIsSlugManuallyEdited(false);
             } else {
                 const errorData = await res.json();
                 alert('Erreur: ' + errorData.error);
@@ -386,6 +405,15 @@ function DashboardContent() {
                                                 <Clock size={14} />
                                                 {meeting.meeting_time.substring(0, 5)}
                                             </div>
+                                            {meeting.duration && (
+                                                <div className="flex items-center gap-1.5">
+                                                    <Clock size={14} className="text-gray-500" />
+                                                    {meeting.duration >= 60
+                                                        ? `${Math.floor(meeting.duration / 60)}h${meeting.duration % 60 > 0 ? ` ${meeting.duration % 60}m` : ''}`
+                                                        : `${meeting.duration} min`
+                                                    }
+                                                </div>
+                                            )}
 
                                             {meeting.is_google_meet && (
                                                 <div className="flex items-center gap-1.5 text-blue-400">
@@ -694,7 +722,7 @@ function DashboardContent() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
                                             <Calendar size={14} /> Date
@@ -718,6 +746,23 @@ function DashboardContent() {
                                             onChange={(e) => setTime(e.target.value)}
                                             className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                         />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+                                        <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
+                                            <Clock size={14} /> Durée
+                                        </label>
+                                        <select
+                                            value={duration}
+                                            onChange={(e) => setDuration(Number(e.target.value))}
+                                            className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                        >
+                                            <option value={15}>15 minutes</option>
+                                            <option value={30}>30 minutes</option>
+                                            <option value={45}>45 minutes</option>
+                                            <option value={60}>1 heure</option>
+                                            <option value={90}>1h 30m</option>
+                                            <option value={120}>2 heures</option>
+                                        </select>
                                     </div>
                                 </div>
 
@@ -764,7 +809,10 @@ function DashboardContent() {
                                         <input
                                             type="text"
                                             value={customSlug}
-                                            onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                                            onChange={(e) => {
+                                                setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'));
+                                                setIsSlugManuallyEdited(true);
+                                            }}
                                             className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
                                             placeholder="mon-appel-perso"
                                         />

@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS al_meetings (
     google_event_id text,
     google_meet_link text,
     host_email text,
+    duration integer DEFAULT 60,
     created_at timestamp DEFAULT now()
 );
 

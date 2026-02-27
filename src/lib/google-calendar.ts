@@ -38,7 +38,8 @@ export async function createCalendarEvent(auth: any, meeting: {
 
     // Combine date and time (assuming time is in HH:MM format)
     const startDateTime = new Date(`${meeting.date}T${meeting.time}:00`);
-    const endDateTime = new Date(startDateTime.getTime() + 30 * 60000); // Default 30 mins
+    const duration = (meeting as any).duration || 30;
+    const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
 
     const event: any = {
         summary: meeting.title,
