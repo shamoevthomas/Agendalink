@@ -708,7 +708,7 @@ function DashboardContent() {
                             </button>
                         </div>
 
-                        <div className="max-h-[80vh] overflow-y-auto">
+                        <div className="max-h-[80vh] overflow-y-auto overflow-x-hidden">
                             <form onSubmit={handleCreateMeeting} className="p-6 space-y-5">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-400">Titre</label>
@@ -722,32 +722,34 @@ function DashboardContent() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
-                                            <Calendar size={14} /> Date
-                                        </label>
-                                        <input
-                                            required
-                                            type="date"
-                                            value={date}
-                                            onChange={(e) => setDate(e.target.value)}
-                                            className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                        />
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
+                                                <Calendar size={14} /> Date
+                                            </label>
+                                            <input
+                                                required
+                                                type="date"
+                                                value={date}
+                                                onChange={(e) => setDate(e.target.value)}
+                                                className="w-full px-3 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
+                                                <Clock size={14} /> Heure
+                                            </label>
+                                            <input
+                                                required
+                                                type="time"
+                                                value={time}
+                                                onChange={(e) => setTime(e.target.value)}
+                                                className="w-full px-3 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                                            />
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
-                                            <Clock size={14} /> Heure
-                                        </label>
-                                        <input
-                                            required
-                                            type="time"
-                                            value={time}
-                                            onChange={(e) => setTime(e.target.value)}
-                                            className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div className="space-y-2 sm:col-span-2 lg:col-span-1">
                                         <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
                                             <Clock size={14} /> Durée
                                         </label>
