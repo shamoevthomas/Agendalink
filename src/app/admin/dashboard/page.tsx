@@ -723,31 +723,29 @@ function DashboardContent() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
-                                                <Calendar size={14} /> Date
-                                            </label>
-                                            <input
-                                                required
-                                                type="date"
-                                                value={date}
-                                                onChange={(e) => setDate(e.target.value)}
-                                                className="w-full px-3 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
-                                                <Clock size={14} /> Heure
-                                            </label>
-                                            <input
-                                                required
-                                                type="time"
-                                                value={time}
-                                                onChange={(e) => setTime(e.target.value)}
-                                                className="w-full px-3 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
-                                            />
-                                        </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
+                                            <Calendar size={14} /> Date
+                                        </label>
+                                        <input
+                                            required
+                                            type="date"
+                                            value={date}
+                                            onChange={(e) => setDate(e.target.value)}
+                                            className="w-full px-3 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
+                                            <Clock size={14} /> Heure
+                                        </label>
+                                        <input
+                                            required
+                                            type="time"
+                                            value={time}
+                                            onChange={(e) => setTime(e.target.value)}
+                                            className="w-full px-3 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
+                                        />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-white flex items-center gap-2 px-1">
@@ -758,12 +756,14 @@ function DashboardContent() {
                                             onChange={(e) => setDuration(Number(e.target.value))}
                                             className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                         >
-                                            <option value={15}>15 minutes</option>
-                                            <option value={30}>30 minutes</option>
-                                            <option value={45}>45 minutes</option>
-                                            <option value={60}>1 heure</option>
-                                            <option value={90}>1h 30m</option>
-                                            <option value={120}>2 heures</option>
+                                            {Array.from({ length: 12 }, (_, i) => (i + 1) * 10).map((min) => {
+                                                const h = Math.floor(min / 60);
+                                                const m = min % 60;
+                                                const label = h > 0
+                                                    ? m > 0 ? `${h}h ${m}min` : `${h}h`
+                                                    : `${m} min`;
+                                                return <option key={min} value={min}>{label}</option>;
+                                            })}
                                         </select>
                                     </div>
                                 </div>
