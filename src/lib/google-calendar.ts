@@ -36,20 +36,31 @@ export async function createCalendarEvent(auth: any, meeting: {
 }) {
     const calendar = google.calendar({ version: 'v3', auth });
 
-    // Combine date and time (assuming time is in HH:MM format)
-    const startDateTime = new Date(`${meeting.date}T${meeting.time}:00`);
+    // Build local datetime strings without UTC conversion so Google Calendar
+    // interprets them in Europe/Paris timezone (avoids the +1h offset bug)
     const duration = (meeting as any).duration || 30;
-    const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
+    const startLocal = `${meeting.date}T${meeting.time}:00`;
+
+    const [h, m] = meeting.time.split(':').map(Number);
+    const totalMinutes = h * 60 + m + duration;
+    const endH = Math.floor(totalMinutes / 60) % 24;
+    const endM = totalMinutes % 60;
+    const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+    const dayOverflow = totalMinutes >= 24 * 60;
+    const endDate = dayOverflow
+        ? new Date(new Date(meeting.date).getTime() + 86400000).toISOString().split('T')[0]
+        : meeting.date;
+    const endLocal = `${endDate}T${endTime}:00`;
 
     const event: any = {
         summary: meeting.title,
         description: meeting.description,
         start: {
-            dateTime: startDateTime.toISOString(),
-            timeZone: 'Europe/Paris', // Or detect from user
+            dateTime: startLocal,
+            timeZone: 'Europe/Paris',
         },
         end: {
-            dateTime: endDateTime.toISOString(),
+            dateTime: endLocal,
             timeZone: 'Europe/Paris',
         },
     };
