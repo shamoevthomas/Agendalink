@@ -7,38 +7,19 @@ const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_REDIRECT_URI
 );
 
-export async function getGoogleAuth(email: string) {
-    // 1. Get refresh token from Supabase
-    const { data, error } = await supabaseAdmin
-        .from('al_admin_settings')
-        .select('google_refresh_token')
-        .eq('email', email)
-        .single();
-
-    if (error || !data?.google_refresh_token) {
-        throw new Error('No refresh token found for this email');
-    }
-
-    // 2. Set credentials
+export async function getCalendarClient(refreshToken: string) {
     oauth2Client.setCredentials({
-        refresh_token: data.google_refresh_token,
+        refresh_token: refreshToken,
     });
-
-    return oauth2Client;
+    return google.calendar({ version: 'v3', auth: oauth2Client });
 }
 
-export async function createCalendarEvent(auth: any, meeting: {
-    title: string;
-    description: string;
-    date: string;
-    time: string;
-    isGoogleMeet: boolean;
-}) {
-    const calendar = google.calendar({ version: 'v3', auth });
-
+export async function insertMeetingIntoGoogleCalendar(refreshToken: string, meeting: any) {
+    const calendar = await getCalendarClient(refreshToken);
+    
     // Build local datetime strings without UTC conversion so Google Calendar
     // interprets them in Europe/Paris timezone (avoids the +1h offset bug)
-    const duration = (meeting as any).duration || 30;
+    const duration = meeting.duration || 30;
     const startLocal = `${meeting.date}T${meeting.time}:00`;
 
     const [h, m] = meeting.time.split(':').map(Number);
@@ -74,47 +55,35 @@ export async function createCalendarEvent(auth: any, meeting: {
         };
     }
 
-    const res = await calendar.events.insert({
+    return await calendar.events.insert({
         calendarId: 'primary',
         requestBody: event,
         conferenceDataVersion: 1,
     });
-
-    const eventData = res.data;
-
-    return {
-        id: eventData.id,
-        meetLink: eventData.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === 'video')?.uri,
-        htmlLink: eventData.htmlLink,
-    };
 }
 
-export async function addAttendee(refreshToken: string, eventId: string, attendeeEmail: string) {
-    oauth2Client.setCredentials({ refresh_token: refreshToken });
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+export async function fetchUpcomingMeetings(refreshToken: string, hostEmail: string) {
+    const calendar = await getCalendarClient(refreshToken);
+    const timeMin = new Date().toISOString();
+    const timeMax = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // Next 24 hours
 
-    // 1. Get current event to preserve existing attendees
-    const event = await calendar.events.get({
+    const response = await calendar.events.list({
         calendarId: 'primary',
-        eventId: eventId,
+        timeMin,
+        timeMax,
+        singleEvents: true,
+        orderBy: 'startTime',
     });
 
-    const currentAttendees = event.data.attendees || [];
-
-    // 2. check if already there
-    if (currentAttendees.find((a: any) => a.email === attendeeEmail)) {
-        return event.data;
-    }
-
-    // 3. Patch the event with the new attendee
-    const res = await calendar.events.patch({
-        calendarId: 'primary',
-        eventId: eventId,
-        sendUpdates: 'all',
-        requestBody: {
-            attendees: [...currentAttendees, { email: attendeeEmail }],
-        },
-    });
-
-    return res.data;
+    const events = response.data.items || [];
+    
+    // Filter for Google Meet events
+    return events.filter(event => event.hangoutLink).map(event => ({
+        google_event_id: event.id,
+        title: event.summary,
+        google_meet_link: event.hangoutLink,
+        start_time: event.start?.dateTime || event.start?.date,
+        host_email: hostEmail,
+        guest_email: event.attendees?.find(a => !a.self)?.email, // Get the first guest
+    }));
 }

@@ -3,6 +3,9 @@ CREATE TABLE IF NOT EXISTS al_admin_settings (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     email text UNIQUE,
     google_refresh_token text,
+    reminders_enabled boolean DEFAULT false,
+    reminder_minutes_before integer DEFAULT 15,
+    last_sync_at timestamp,
     updated_at timestamp DEFAULT now()
 );
 
@@ -18,6 +21,8 @@ CREATE TABLE IF NOT EXISTS al_meetings (
     google_event_id text,
     google_meet_link text,
     host_email text,
+    guest_email text,
+    reminder_sent boolean DEFAULT false,
     duration integer DEFAULT 60,
     created_at timestamp DEFAULT now()
 );
