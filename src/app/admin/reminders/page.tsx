@@ -49,6 +49,8 @@ export default function RemindersPage() {
     
     // Config editing state
     const [reminders, setReminders] = useState<ReminderConfig[]>([]);
+    const [manualTemplate, setManualTemplate] = useState(DEFAULT_TEMPLATE);
+    const [previewContent, setPreviewContent] = useState<string | null>(null);
 
     useEffect(() => {
         fetchSettingsAndMeetings();
@@ -73,6 +75,7 @@ export default function RemindersPage() {
         if (data) {
             setSettings(data);
             setReminders(data.reminders_config || []);
+            setManualTemplate(data.manual_reminder_template || DEFAULT_TEMPLATE);
             console.log("Settings loaded:", data);
             if (data.google_refresh_token) {
                 await fetchUpcomingMeetings(data.email);
@@ -103,6 +106,7 @@ export default function RemindersPage() {
             .update({
                 reminders_enabled: settings.reminders_enabled,
                 reminders_config: reminders,
+                manual_reminder_template: manualTemplate,
             })
             .eq('id', settings.id);
 
@@ -156,6 +160,20 @@ export default function RemindersPage() {
         } finally {
             setSendingReminder(null);
         }
+    };
+
+    const renderPreview = (content: string) => {
+        const previewVars = {
+            name: "Jean Dupont",
+            time: "14:30",
+            meet_link: "https://meet.google.com/abc-defg-hij"
+        };
+        const finalHtml = content
+            .replace(/{{name}}/g, previewVars.name)
+            .replace(/{{time}}/g, previewVars.time)
+            .replace(/{{meet_link}}/g, previewVars.meet_link);
+        
+        setPreviewContent(finalHtml);
     };
 
     if (loading) return (
@@ -321,6 +339,37 @@ export default function RemindersPage() {
                         
                         {/* Modal Body */}
                         <div className="flex-1 overflow-y-auto p-10 space-y-12">
+                            {/* Manual Reminder Template */}
+                            <div className="space-y-6">
+                                <h4 className="text-lg font-bold flex items-center gap-3">
+                                    <Send className="text-blue-500" size={20} />
+                                    Rappel Manuel (Template unique)
+                                </h4>
+                                <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8 space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                                <Code size={14} />
+                                                Template de l'envoi manuel
+                                            </label>
+                                            <button 
+                                                onClick={() => renderPreview(manualTemplate)}
+                                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold hover:bg-white/10 transition-all flex items-center gap-2"
+                                            >
+                                                <ExternalLink size={12} />
+                                                Prévisualiser
+                                            </button>
+                                        </div>
+                                        <textarea 
+                                            value={manualTemplate}
+                                            onChange={(e) => setManualTemplate(e.target.value)}
+                                            placeholder="HTML pour l'envoi manuel..."
+                                            className="w-full h-40 px-6 py-4 bg-black border border-white/10 rounded-2xl text-xs font-mono text-blue-100/60 focus:ring-2 focus:ring-blue-500 outline-none resize-none leading-relaxed"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Reminders List */}
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
@@ -402,10 +451,19 @@ export default function RemindersPage() {
                                                             <Code size={14} />
                                                             Contenu HTML du Mail
                                                         </label>
-                                                        <div className="group relative">
-                                                            <Info size={14} className="text-blue-500 cursor-help" />
-                                                            <div className="absolute bottom-full right-0 mb-2 w-64 p-3 bg-blue-900 border border-blue-500 rounded-xl text-[10px] text-blue-100 hidden group-hover:block z-10 shadow-2xl">
-                                                                Variables: {"{{name}}"}, {"{{time}}"}, {"{{meet_link}}"}
+                                                        <div className="flex items-center gap-2">
+                                                            <button 
+                                                                onClick={() => renderPreview(reminder.html_template)}
+                                                                className="px-3 py-1.5 bg-blue-600/10 text-blue-500 border border-blue-500/20 rounded-lg text-[10px] font-bold hover:bg-blue-600/20 transition-all flex items-center gap-2"
+                                                            >
+                                                                <ExternalLink size={10} />
+                                                                Prévisualiser
+                                                            </button>
+                                                            <div className="group relative">
+                                                                <Info size={14} className="text-blue-500 cursor-help" />
+                                                                <div className="absolute bottom-full right-0 mb-2 w-64 p-3 bg-blue-900 border border-blue-500 rounded-xl text-[10px] text-blue-100 hidden group-hover:block z-10 shadow-2xl">
+                                                                    Variables: {"{{name}}"}, {"{{time}}"}, {"{{meet_link}}"}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -455,6 +513,26 @@ export default function RemindersPage() {
                                     {saving ? 'Synchronisation...' : 'Tout Sauvegarder'}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* PREVIEW MODAL */}
+            {previewContent && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 md:p-10">
+                    <div className="bg-white w-full max-w-4xl h-full rounded-[30px] overflow-hidden flex flex-col shadow-2xl">
+                        <div className="p-4 bg-gray-100 border-b flex items-center justify-between">
+                            <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Aperçu du mail</span>
+                            <button 
+                                onClick={() => setPreviewContent(null)}
+                                className="p-2 bg-black text-white rounded-xl font-bold text-xs"
+                            >
+                                Fermer l'aperçu
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-auto bg-[#f9fafb]">
+                            <div dangerouslySetInnerHTML={{ __html: previewContent }} />
                         </div>
                     </div>
                 </div>

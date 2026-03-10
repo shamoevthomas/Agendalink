@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS al_admin_settings (
     reminder_minutes_before integer default 15,
     last_sync_at timestamp with time zone,
     reminders_config jsonb default '[]'::jsonb,
+    manual_reminder_template text,
     created_at timestamp with time zone default now()
 );
 

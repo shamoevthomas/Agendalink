@@ -37,15 +37,16 @@ export async function POST(request: Request) {
         const guestEmail = event.attendees?.find(a => !a.self)?.email;
         const meetingTimeStr = startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
-        const htmlTemplate = (name: string, meetLink: string, time: string) => `
+        // Use the manual template from settings or a default
+        const htmlTemplate = user.manual_reminder_template || `
             <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
                 <h2 style="color: #2563eb;">Rappel de votre réunion</h2>
-                <p>Bonjour ${name},</p>
+                <p>Bonjour {{name}},</p>
                 <p>Ceci est un rappel manuel pour votre réunion :</p>
-                <div style="background: #f8fafc; padding: 15px; rounded: 8px; margin: 20px 0;">
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
                     <p style="margin: 5px 0;"><strong>Sujet :</strong> ${event.summary}</p>
-                    <p style="margin: 5px 0;"><strong>Heure :</strong> ${meetingTimeStr}</p>
-                    <p style="margin: 5px 0;"><strong>Lien Meet :</strong> <a href="${meetLink}">${meetLink}</a></p>
+                    <p style="margin: 5px 0;"><strong>Heure :</strong> {{time}}</p>
+                    <p style="margin: 5px 0;"><strong>Lien Meet :</strong> <a href="{{meet_link}}">{{meet_link}}</a></p>
                 </div>
                 <p>À tout de suite !</p>
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
@@ -53,18 +54,25 @@ export async function POST(request: Request) {
             </div>
         `;
 
+        const replaceVars = (html: string, name: string) => {
+            return html
+                .replace(/{{name}}/g, name)
+                .replace(/{{time}}/g, meetingTimeStr)
+                .replace(/{{meet_link}}/g, event.hangoutLink!);
+        };
+
         // 3. Send Emails
         await sendEmail({
             to: [{ email: hostEmail }],
             subject: `Rappel Manuel : ${event.summary}`,
-            htmlContent: htmlTemplate('Host', event.hangoutLink, meetingTimeStr),
+            htmlContent: replaceVars(htmlTemplate, 'Hôte'),
         });
 
         if (guestEmail) {
             await sendEmail({
                 to: [{ email: guestEmail }],
                 subject: `Rappel Manuel : ${event.summary}`,
-                htmlContent: htmlTemplate('Invité', event.hangoutLink, meetingTimeStr),
+                htmlContent: replaceVars(htmlTemplate, 'Invité'),
             });
         }
 
