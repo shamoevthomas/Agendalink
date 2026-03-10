@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from 'react';
-import { Plus, Copy, ExternalLink, Calendar, Clock, Video, CheckCircle2, AlertCircle, Trash2, LogOut, Settings, User, X, Loader2, Send, Camera, Upload, BarChart2, Phone } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Copy, ExternalLink, Calendar, Clock, Video, CheckCircle2, AlertCircle, Trash2, LogOut, Settings, User, X, Loader2, Send, Camera, Upload, BarChart2, Phone, Bell } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import ImageCropper from './ImageCropper';
 import { supabase } from '@/lib/supabase';
@@ -360,6 +361,13 @@ function DashboardContent() {
                 >
                     Configuration
                 </button>
+                <Link
+                    href="/admin/reminders"
+                    className="px-6 py-2 rounded-lg font-medium text-gray-400 hover:text-white transition-all flex items-center gap-2"
+                >
+                    <Bell size={18} />
+                    Rappels
+                </Link>
             </div>
 
             {activeTab === 'meetings' ? (

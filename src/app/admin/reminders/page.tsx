@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Calendar, Mail, Settings, CheckCircle2, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
+import { Calendar, Mail, Settings, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 
 export default function RemindersPage() {
     const [settings, setSettings] = useState<any>(null);
@@ -48,6 +49,11 @@ export default function RemindersPage() {
 
     return (
         <div className="max-w-4xl mx-auto p-8">
+            <Link href="/admin/dashboard" className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors mb-6 font-medium">
+                <ArrowLeft className="w-4 h-4" />
+                Retour au Dashboard
+            </Link>
+            
             <h1 className="text-3xl font-bold mb-8 flex items-center gap-3">
                 <Settings className="w-8 h-8 text-blue-600" />
                 Configuration des Rappels Google Meet
