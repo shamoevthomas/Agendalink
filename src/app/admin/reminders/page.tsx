@@ -287,6 +287,22 @@ export default function RemindersPage() {
                                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings?.reminders_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                     </button>
                                 </div>
+                                
+                                {/* Profile Card Snippet Button */}
+                                <div className="group relative">
+                                    <button className="flex items-center gap-2 px-4 py-2 bg-blue-600/10 text-blue-500 border border-blue-500/20 rounded-full font-bold text-xs hover:bg-blue-600/20 transition-all">
+                                        <Code size={14} />
+                                        Profile Card HTML
+                                    </button>
+                                    <div className="absolute top-full right-0 mt-3 w-80 p-5 bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                        <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3">Copy this snippet</p>
+                                        <div className="bg-black p-3 rounded-xl border border-white/5 font-mono text-[10px] text-gray-400 break-all select-all leading-relaxed">
+                                            {`<div style="display:flex;align-items:center;gap:12px;padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0"><img src="{{profile_img}}" style="width:48px;height:48px;border-radius:50%"/><div><b style="display:block;color:#0f172a">{{name}}</b><span style="font-size:12px;color:#64748b">Directeur CloseOS</span></div></div>`}
+                                        </div>
+                                        <p className="mt-3 text-[9px] text-gray-500 italic">Injectez ce code dans vos templates pour afficher votre profil.</p>
+                                    </div>
+                                </div>
+
                                 <button onClick={() => setShowConfig(false)} className="p-3 bg-white/5 rounded-2xl text-gray-500 hover:text-white transition-all border border-white/10">
                                     <AlertCircle className="w-6 h-6 rotate-45" />
                                 </button>
