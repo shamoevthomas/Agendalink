@@ -98,6 +98,28 @@ export async function insertMeetingIntoGoogleCalendar(refreshToken: string, meet
     return createCalendarEvent(auth, meeting);
 }
 
+export async function addAttendee(refreshToken: string, eventId: string, email: string) {
+    const calendar = await getCalendarClient(refreshToken);
+
+    const event = await calendar.events.get({
+        calendarId: 'primary',
+        eventId: eventId,
+    });
+
+    const attendees = event.data.attendees || [];
+    if (!attendees.find(a => a.email === email)) {
+        attendees.push({ email });
+    }
+
+    return await calendar.events.patch({
+        calendarId: 'primary',
+        eventId: eventId,
+        requestBody: {
+            attendees: attendees,
+        },
+    });
+}
+
 export async function fetchUpcomingMeetings(refreshToken: string, hostEmail: string) {
     const calendar = await getCalendarClient(refreshToken);
     const timeMin = new Date().toISOString();
