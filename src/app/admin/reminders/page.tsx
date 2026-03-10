@@ -64,6 +64,7 @@ export default function RemindersPage() {
         if (data) {
             setSettings(data);
             setReminders(data.reminders_config || []);
+            console.log("Settings loaded:", data);
             if (data.google_refresh_token) {
                 await fetchUpcomingMeetings(data.email);
             }
