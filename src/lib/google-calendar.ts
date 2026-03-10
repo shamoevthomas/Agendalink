@@ -14,23 +14,44 @@ export async function getCalendarClient(refreshToken: string) {
     return google.calendar({ version: 'v3', auth: oauth2Client });
 }
 
-export async function insertMeetingIntoGoogleCalendar(refreshToken: string, meeting: any) {
-    const calendar = await getCalendarClient(refreshToken);
-    
+export async function getGoogleAuth(email: string) {
+    const { data: adminSettings, error } = await supabaseAdmin
+        .from('al_admin_settings')
+        .select('google_refresh_token')
+        .eq('email', email)
+        .single();
+
+    if (error || !adminSettings?.google_refresh_token) {
+        throw new Error('Google account not connected or refresh token missing');
+    }
+
+    oauth2Client.setCredentials({
+        refresh_token: adminSettings.google_refresh_token,
+    });
+
+    return oauth2Client;
+}
+
+export async function createCalendarEvent(auth: any, meeting: any) {
+    const calendar = google.calendar({ version: 'v3', auth });
+
     // Build local datetime strings without UTC conversion so Google Calendar
     // interprets them in Europe/Paris timezone (avoids the +1h offset bug)
-    const duration = meeting.duration || 30;
-    const startLocal = `${meeting.date}T${meeting.time}:00`;
+    const duration = meeting.duration || 60;
+    const date = meeting.meeting_date || meeting.date;
+    const time = meeting.meeting_time || meeting.time;
+    
+    const startLocal = `${date}T${time}:00`;
 
-    const [h, m] = meeting.time.split(':').map(Number);
+    const [h, m] = time.split(':').map(Number);
     const totalMinutes = h * 60 + m + duration;
     const endH = Math.floor(totalMinutes / 60) % 24;
     const endM = totalMinutes % 60;
     const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
     const dayOverflow = totalMinutes >= 24 * 60;
     const endDate = dayOverflow
-        ? new Date(new Date(meeting.date).getTime() + 86400000).toISOString().split('T')[0]
-        : meeting.date;
+        ? new Date(new Date(date).getTime() + 86400000).toISOString().split('T')[0]
+        : date;
     const endLocal = `${endDate}T${endTime}:00`;
 
     const event: any = {
@@ -46,7 +67,7 @@ export async function insertMeetingIntoGoogleCalendar(refreshToken: string, meet
         },
     };
 
-    if (meeting.isGoogleMeet) {
+    if (meeting.is_google_meet || meeting.isGoogleMeet) {
         event.conferenceData = {
             createRequest: {
                 requestId: Math.random().toString(36).substring(7),
@@ -55,11 +76,26 @@ export async function insertMeetingIntoGoogleCalendar(refreshToken: string, meet
         };
     }
 
-    return await calendar.events.insert({
+    const res = await calendar.events.insert({
         calendarId: 'primary',
         requestBody: event,
         conferenceDataVersion: 1,
     });
+
+    return {
+        id: res.data.id,
+        meetLink: res.data.hangoutLink
+    };
+}
+
+export async function insertMeetingIntoGoogleCalendar(refreshToken: string, meeting: any) {
+    const auth = new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        process.env.GOOGLE_REDIRECT_URI
+    );
+    auth.setCredentials({ refresh_token: refreshToken });
+    return createCalendarEvent(auth, meeting);
 }
 
 export async function fetchUpcomingMeetings(refreshToken: string, hostEmail: string) {
