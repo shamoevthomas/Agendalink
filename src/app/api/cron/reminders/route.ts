@@ -68,6 +68,7 @@ export async function GET(request: Request) {
                     }
 
                     const sentReminders = meeting?.sent_reminders || [];
+                    const isNewMeeting = !meeting;
 
                     // 3. Process each configured reminder
                     for (const config of user.reminders_config) {
@@ -82,13 +83,13 @@ export async function GET(request: Request) {
                             }
                         } else if (config.type === 'before_event') {
                             const configMins = config.unit === 'hours' ? config.value * 60 : config.value;
-                            // Check window of 10 minutes (cron usually runs every 5-15 mins)
+                            // Check window of 15 minutes
                             if (diffMins <= configMins && diffMins >= configMins - 15) {
                                 shouldSend = true;
                             }
                         } else if (config.type === 'at_booking') {
-                            // At booking should be sent immediately if possible, 
-                            // here we send it on the first sync if not sent yet
+                            // Only send 'at_booking' if this is the first time we see this meeting 
+                            // OR if it's an existing meeting but this specific reminder hasn't been sent.
                             shouldSend = true;
                         }
 

@@ -52,7 +52,16 @@ export default function RemindersPage() {
 
     useEffect(() => {
         fetchSettingsAndMeetings();
-    }, []);
+        
+        // Auto-refresh every 30 seconds
+        const interval = setInterval(() => {
+            if (settings?.email) {
+                fetchUpcomingMeetings(settings.email);
+            }
+        }, 30000);
+        
+        return () => clearInterval(interval);
+    }, [settings?.email]);
 
     const fetchSettingsAndMeetings = async () => {
         setLoading(true);
