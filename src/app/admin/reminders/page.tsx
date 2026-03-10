@@ -164,7 +164,7 @@ export default function RemindersPage() {
                     {meetings.length === 0 ? (
                         <div className="bg-white/5 border border-dashed border-white/10 rounded-3xl p-20 text-center">
                             <Calendar className="w-12 h-12 text-gray-700 mx-auto mb-4" />
-                            <p className="text-gray-500 font-medium">Aucun appel Google Meet détecté dans les prochaines 24h.</p>
+                            <p className="text-gray-500 font-medium">Aucun appel Google Meet détecté dans les prochains 30 jours.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-4">

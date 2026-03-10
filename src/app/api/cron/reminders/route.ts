@@ -19,7 +19,7 @@ export async function GET(request: Request) {
             const calendar = await getCalendarClient(user.google_refresh_token);
             const now = new Date();
             const timeMin = now.toISOString();
-            const timeMax = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+            const timeMax = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
             // 2. Sync Google Calendar events
             const { data: { items: events } } = await calendar.events.list({

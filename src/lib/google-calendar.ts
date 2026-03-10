@@ -123,7 +123,7 @@ export async function addAttendee(refreshToken: string, eventId: string, email: 
 export async function fetchUpcomingMeetings(refreshToken: string, hostEmail: string) {
     const calendar = await getCalendarClient(refreshToken);
     const timeMin = new Date().toISOString();
-    const timeMax = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // Next 24 hours
+    const timeMax = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // Next 30 days
 
     const response = await calendar.events.list({
         calendarId: 'primary',
