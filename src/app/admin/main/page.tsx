@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Sparkles, Calendar, Clock, Video, BarChart2, Bell, Plus } from 'lucide-react';
+import { Sparkles, Calendar, Clock, Video, BarChart2, Bell, Plus, Link as LinkIcon, Copy, X, Loader2 } from 'lucide-react';
 
 
 export default function MainDashboardPage() {
@@ -11,6 +11,19 @@ export default function MainDashboardPage() {
 
     const [reminders, setReminders] = useState<any[]>([]);
     const [remindersLoading, setRemindersLoading] = useState(true);
+
+    // Meeting Creation State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formLoading, setFormLoading] = useState(false);
+    const [title, setTitle] = useState('');
+    const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
+    const [description, setDescription] = useState('');
+    const [isGoogleMeet, setIsGoogleMeet] = useState(true);
+    const [requestPhone, setRequestPhone] = useState(false);
+    const [duration, setDuration] = useState(60);
+    const [customSlug, setCustomSlug] = useState('');
+    const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
 
     useEffect(() => {
         fetchMeetings();
@@ -22,6 +35,41 @@ export default function MainDashboardPage() {
         }, 30000);
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        if (isModalOpen) {
+            // Set default date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            setDate(tomorrow.toISOString().split('T')[0]);
+
+            // Set default time to current time rounded up to nearest 10 min
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const roundedMinutes = Math.ceil(minutes / 10) * 10;
+            now.setMinutes(roundedMinutes);
+            now.setSeconds(0);
+
+            // Format time as HH:MM
+            const hours = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            setTime(`${hours}:${mins}`);
+
+            // Reset slug edit state
+            setIsSlugManuallyEdited(false);
+        }
+    }, [isModalOpen]);
+
+    // Auto-slug generation
+    useEffect(() => {
+        if (!isSlugManuallyEdited && title) {
+            const slug = title.toLowerCase()
+                .replace(/[^a-z0-9]/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+            setCustomSlug(slug);
+        }
+    }, [title, isSlugManuallyEdited]);
 
     const fetchMeetings = async () => {
         try {
@@ -71,6 +119,54 @@ export default function MainDashboardPage() {
         }
     };
 
+    const handleCreateMeeting = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setFormLoading(true);
+        try {
+            const res = await fetch('/api/meetings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title,
+                    date,
+                    time,
+                    description,
+                    isGoogleMeet,
+                    custom_slug: customSlug,
+                    request_phone: requestPhone,
+                    duration: duration
+                }),
+            });
+
+            if (res.ok) {
+                setIsModalOpen(false);
+                fetchMeetings();
+                // Reset form
+                setTitle('');
+                setDate('');
+                setTime('');
+                setDescription('');
+                setCustomSlug('');
+                setRequestPhone(false);
+                setDuration(60);
+                setIsSlugManuallyEdited(false);
+            } else {
+                const errorData = await res.json();
+                alert('Erreur: ' + errorData.error);
+            }
+        } catch (err) {
+            alert('Une erreur est survenue');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const copyLink = (shareId: string) => {
+        const url = `${window.location.origin}/join/${shareId}`;
+        navigator.clipboard.writeText(url);
+        alert('Lien copié !');
+    };
+
     return (
         <div className="space-y-10 animate-in fade-in duration-500 pb-20">
             {/* Page Header */}
@@ -89,10 +185,13 @@ export default function MainDashboardPage() {
                         <p className="text-gray-500 text-sm mt-1">Gérez vos synchronisations et vos prochains appels Meet.</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Link href="/admin/dashboard" className="px-5 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl font-bold text-sm transition-all flex items-center gap-2">
-                            <BarChart2 size={16} />
-                            Stats
-                        </Link>
+                        <button 
+                            onClick={() => setIsModalOpen(true)}
+                            className="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20"
+                        >
+                            <Plus size={16} />
+                            Nouveau Rendez-vous
+                        </button>
                         <button onClick={handleSync} disabled={loading} className="px-5 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50">
                             <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                             Actualiser
@@ -133,13 +232,20 @@ export default function MainDashboardPage() {
                                     </div>
                                     <div className="hidden sm:block">
                                         {meeting.google_event_id ? (
-                                            <span className="px-2 py-1 bg-blue-500/10 text-blue-500 text-[10px] font-bold rounded border border-blue-500/20">Synchronisé</span>
+                                            <span className="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded border border-green-500/20">Synchronisé</span>
                                         ) : (
-                                            <span className="px-2 py-1 bg-gray-500/10 text-gray-400 text-[10px] font-bold rounded border border-white/10">En attente</span>
+                                            <span className="px-2 py-1 bg-blue-500/10 text-blue-500 text-[10px] font-bold rounded border border-blue-500/20">En attente</span>
                                         )}
                                     </div>
                                     <div className="text-right text-gray-500 font-medium text-xs flex items-center justify-end gap-3">
-                                        <Link href="/admin/dashboard" className="hover:text-white transition-colors">Détails</Link>
+                                        <button 
+                                            onClick={() => copyLink(meeting.share_id)}
+                                            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-blue-400 font-bold transition-all flex items-center gap-1.5"
+                                        >
+                                            <Copy size={12} />
+                                            Lien
+                                        </button>
+                                        <Link href="/admin/dashboard" className="hover:text-white transition-colors">Gérer</Link>
                                     </div>
                                 </div>
                             ))}
@@ -213,6 +319,104 @@ export default function MainDashboardPage() {
                     )}
                 </div>
             </div>
+            {/* Nouveau Rendez-vous Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                    <div className="bg-[#111] w-full max-w-lg border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                            <h3 className="text-xl font-bold">Nouveau Rendez-vous</h3>
+                            <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-xl text-gray-400 hover:text-white transition-all">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreateMeeting} className="p-6 space-y-5">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Titre</label>
+                                <input
+                                    required
+                                    type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    placeholder="Ex: Appel de découverte"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1 flex items-center gap-2">
+                                        <Calendar size={12} /> Date
+                                    </label>
+                                    <input
+                                        required
+                                        type="date"
+                                        value={date}
+                                        onChange={(e) => setDate(e.target.value)}
+                                        className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all [color-scheme:dark]"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1 flex items-center gap-2">
+                                        <Clock size={12} /> Heure
+                                    </label>
+                                    <input
+                                        required
+                                        type="time"
+                                        value={time}
+                                        onChange={(e) => setTime(e.target.value)}
+                                        className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all [color-scheme:dark]"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Lien d'invitation personnalisé</label>
+                                <div className="flex items-center gap-2 px-4 py-3 bg-black border border-white/10 rounded-xl group focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+                                    <span className="text-gray-500 text-sm">agendalink.app/join/</span>
+                                    <input
+                                        type="text"
+                                        value={customSlug}
+                                        onChange={(e) => {
+                                            setCustomSlug(e.target.value);
+                                            setIsSlugManuallyEdited(true);
+                                        }}
+                                        className="flex-1 bg-transparent border-none outline-none text-white text-sm p-0"
+                                        placeholder="mon-appel"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${isGoogleMeet ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' : 'bg-white/5 border-white/10 text-gray-500'}`}>
+                                        <Video size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold">Lien Google Meet</p>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest">Généré automatiquement</p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsGoogleMeet(!isGoogleMeet)}
+                                    className={`w-12 h-6 rounded-full relative transition-all duration-300 ${isGoogleMeet ? 'bg-blue-600' : 'bg-gray-700'}`}
+                                >
+                                    <div className={`absolute top-1 bottom-1 w-4 bg-white rounded-full transition-all duration-300 ${isGoogleMeet ? 'right-1' : 'left-1'}`} />
+                                </button>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={formLoading}
+                                className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2 mt-4 shadow-xl shadow-white/5 disabled:opacity-50"
+                            >
+                                {formLoading ? <Loader2 className="animate-spin" size={20} /> : 'Créer et Synchroniser'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
