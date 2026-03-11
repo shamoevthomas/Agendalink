@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Sparkles, Calendar, Clock, Video, BarChart2, Bell, Plus, Link as LinkIcon, Copy, X, Loader2, Phone, Pencil, Trash2 } from 'lucide-react';
+import { Sparkles, Calendar, Clock, Video, BarChart2, Bell, Plus, Link as LinkIcon, Copy, X, Loader2, Phone, Pencil, Trash2, Send } from 'lucide-react';
 
 
 export default function MainDashboardPage() {
@@ -40,6 +40,9 @@ export default function MainDashboardPage() {
     // Delete Meeting State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingMeeting, setDeletingMeeting] = useState<any>(null);
+
+    // Manual Reminder State
+    const [sendingReminder, setSendingReminder] = useState<string | null>(null);
 
     useEffect(() => {
         fetchMeetings();
@@ -252,6 +255,34 @@ export default function MainDashboardPage() {
         }
     };
 
+    const sendManualReminder = async (meeting: any) => {
+        if (!meeting.google_event_id) {
+            alert("Ce rendez-vous n'est pas synchronisé avec Google Calendar.");
+            return;
+        }
+
+        setSendingReminder(meeting.id);
+        try {
+            const res = await fetch('/api/cron/reminders/manual', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ eventId: meeting.google_event_id }),
+            });
+
+            if (res.ok) {
+                alert('Rappel envoyé avec succès !');
+            } else {
+                const data = await res.json();
+                alert(data.error || "Erreur lors de l'envoi du rappel");
+            }
+        } catch (err) {
+            console.error('Manual reminder error:', err);
+            alert('Une erreur est survenue lors de l\'envoi');
+        } finally {
+            setSendingReminder(null);
+        }
+    };
+
     return (
         <div className="space-y-10 animate-in fade-in duration-500 pb-20">
             {/* Page Header */}
@@ -333,6 +364,18 @@ export default function MainDashboardPage() {
                                         >
                                             <Copy size={12} />
                                             Lien
+                                        </button>
+                                        <button 
+                                            onClick={() => sendManualReminder(meeting)}
+                                            disabled={sendingReminder === meeting.id || !meeting.google_event_id}
+                                            className={`px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-white font-bold transition-all flex items-center gap-1.5 ${(!meeting.google_event_id || sendingReminder === meeting.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            {sendingReminder === meeting.id ? (
+                                                <Loader2 size={12} className="animate-spin" />
+                                            ) : (
+                                                <Send size={12} />
+                                            )}
+                                            Rappel
                                         </button>
                                         <button 
                                             onClick={() => {
