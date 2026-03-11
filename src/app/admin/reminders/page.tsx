@@ -459,6 +459,9 @@ export default function RemindersPage() {
                 </div>
 
             </div>
+        </div>
+    );
+
     if (loading) return (
         <div className="min-h-screen bg-[#050505] flex items-center justify-center">
             <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
@@ -543,7 +546,6 @@ export default function RemindersPage() {
                         <Plus className="w-6 h-6 text-gray-500 mb-3" />
                         <span className="text-gray-500 text-[11px] font-bold uppercase tracking-widest text-center">Ajouter un rappel</span>
                     </button>
-                </div>
                 </div>
             </div>
         </div>
