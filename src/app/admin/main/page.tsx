@@ -351,11 +351,35 @@ export default function MainDashboardPage() {
                                         {meeting.title}
                                     </div>
                                     <div className="hidden sm:block">
-                                        {meeting.google_event_id ? (
-                                            <span className="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded border border-green-500/20">Synchronisé</span>
-                                        ) : (
-                                            <span className="px-2 py-1 bg-blue-500/10 text-blue-500 text-[10px] font-bold rounded border border-blue-500/20">En attente</span>
-                                        )}
+                                        {(() => {
+                                            const now = new Date();
+                                            const [hours, minutes] = meeting.meeting_time.split(':').map(Number);
+                                            const start = new Date(meeting.meeting_date);
+                                            start.setHours(hours, minutes, 0, 0);
+                                            
+                                            const end = new Date(start.getTime() + (meeting.duration || 60) * 60000);
+
+                                            if (now >= start && now <= end) {
+                                                return (
+                                                    <span className="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded border border-green-500/20 flex items-center gap-1.5 w-fit">
+                                                        <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+                                                        En cours
+                                                    </span>
+                                                );
+                                            } else if (now > end) {
+                                                return (
+                                                    <span className="px-2 py-1 bg-white/5 text-gray-500 text-[10px] font-bold rounded border border-white/10 w-fit">
+                                                        Passé
+                                                    </span>
+                                                );
+                                            } else {
+                                                return (
+                                                    <span className="px-2 py-1 bg-blue-500/10 text-blue-500 text-[10px] font-bold rounded border border-blue-500/20 w-fit">
+                                                        Prévu
+                                                    </span>
+                                                );
+                                            }
+                                        })()}
                                     </div>
                                     <div className="text-right text-gray-500 font-medium text-xs flex items-center justify-end gap-3" onClick={(e) => e.stopPropagation()}>
                                         <button 
