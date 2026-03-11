@@ -1,5 +1,5 @@
 // Minimal Service Worker for PWA compliance
-const CACHE_NAME = 'agendalink-v1';
+const CACHE_NAME = 'agendalink-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',

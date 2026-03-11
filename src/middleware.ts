@@ -4,8 +4,8 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Protect admin dashboard routes
-    if (pathname.startsWith('/admin/dashboard')) {
+    // Protect all admin routes except the main /admin login page
+    if (pathname.startsWith('/admin') && pathname !== '/admin') {
         const adminSession = request.cookies.get('admin_session');
 
         if (!adminSession || adminSession.value !== 'true') {
@@ -17,5 +17,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/admin/dashboard/:path*'],
+    matcher: ['/admin/:path*'],
 };

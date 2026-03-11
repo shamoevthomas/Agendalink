@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     const code = searchParams.get('code');
 
     if (!code) {
-        return NextResponse.redirect(new URL('/admin/dashboard?error=no_code', request.url));
+        return NextResponse.redirect(new URL('/admin/main?error=no_code', request.url));
     }
 
     try {
@@ -42,12 +42,12 @@ export async function GET(request: Request) {
 
         if (error) {
             console.error('Supabase error:', error);
-            return NextResponse.redirect(new URL('/admin/dashboard?error=db_error', request.url));
+            return NextResponse.redirect(new URL('/admin/main?error=db_error', request.url));
         }
 
-        return NextResponse.redirect(new URL('/admin/dashboard?success=google_connected', request.url));
+        return NextResponse.redirect(new URL('/admin/main?success=google_connected', request.url));
     } catch (error) {
         console.error('OAuth error:', error);
-        return NextResponse.redirect(new URL('/admin/dashboard?error=auth_failed', request.url));
+        return NextResponse.redirect(new URL('/admin/main?error=auth_failed', request.url));
     }
 }
