@@ -5,11 +5,21 @@ import { sendEmail } from '@/lib/brevo';
 
 export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const forceUserEmail = searchParams.get('user_email');
+
         // 1. Fetch users with reminders enabled
-        const { data: users, error: usersError } = await supabaseAdmin
+        let query = supabaseAdmin
             .from('al_admin_settings')
-            .select('*')
-            .eq('reminders_enabled', true);
+            .select('*');
+        
+        if (forceUserEmail) {
+            query = query.eq('email', forceUserEmail);
+        } else {
+            query = query.eq('reminders_enabled', true);
+        }
+
+        const { data: users, error: usersError } = await query;
 
         if (usersError) throw usersError;
         console.log(`[Cron] Found ${users?.length || 0} users with reminders enabled`);
@@ -153,6 +163,7 @@ export async function GET(request: Request) {
                                     to: [{ email: user.email }],
                                     subject: `Rappel : ${event.summary}`,
                                     htmlContent: finalHtml,
+                                    sender: { name: hostName, email: user.email }
                                 });
 
                                 // Send to guest if available
@@ -161,6 +172,7 @@ export async function GET(request: Request) {
                                         to: [{ email: guestEmail }],
                                         subject: `Rappel : ${event.summary}`,
                                         htmlContent: finalHtml,
+                                        sender: { name: hostName, email: user.email }
                                     });
                                 }
 

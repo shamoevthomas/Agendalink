@@ -91,6 +91,8 @@ export default function RemindersPage() {
             const data = await res.json();
             if (data.success) {
                 setMeetings(data.meetings);
+                // Trigger immediate reminder check for this user
+                await fetch(`/api/cron/reminders?user_email=${email}`);
             }
         } catch (err) {
             console.error('Sync error:', err);

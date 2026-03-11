@@ -23,7 +23,6 @@ CREATE TABLE IF NOT EXISTS al_meetings (
     share_id uuid UNIQUE DEFAULT gen_random_uuid(),
     google_event_id text,
     google_meet_link text,
-    google_meet_link text,
     guest_email text,
     reminder_sent boolean default false,
     sent_reminders jsonb default '[]'::jsonb,

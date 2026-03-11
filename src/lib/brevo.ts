@@ -4,7 +4,7 @@ export async function sendEmail({
     to,
     subject,
     htmlContent,
-    sender = { name: 'CloseOS Support', email: 'support@closeos.fr' }
+    sender = { name: 'AgendaLink', email: 'notifications@agendalink.fr' }
 }: {
     to: { email: string; name?: string }[];
     subject: string;
