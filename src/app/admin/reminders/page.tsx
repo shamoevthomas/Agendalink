@@ -18,6 +18,7 @@ interface ReminderConfig {
     value?: number;
     unit?: 'minutes' | 'hours';
     html_template: string;
+    subject?: string;
 }
 
 const DEFAULT_TEMPLATE = `
@@ -50,6 +51,7 @@ export default function RemindersPage() {
     // Config editing state
     const [reminders, setReminders] = useState<ReminderConfig[]>([]);
     const [manualTemplate, setManualTemplate] = useState(DEFAULT_TEMPLATE);
+    const [manualSubject, setManualSubject] = useState('');
     const [previewContent, setPreviewContent] = useState<string | null>(null);
 
     useEffect(() => {
@@ -76,6 +78,7 @@ export default function RemindersPage() {
             setSettings(data);
             setReminders(data.reminders_config || []);
             setManualTemplate(data.manual_reminder_template || DEFAULT_TEMPLATE);
+            setManualSubject(data.manual_reminder_subject || 'Rappel de votre réunion avec {{host_name}}');
             console.log("Settings loaded:", data);
             if (data.google_refresh_token) {
                 await fetchUpcomingMeetings(data.email);
@@ -113,6 +116,7 @@ export default function RemindersPage() {
                 reminders_enabled: settings.reminders_enabled,
                 reminders_config: reminders,
                 manual_reminder_template: manualTemplate,
+                manual_reminder_subject: manualSubject,
             })
             .eq('id', settings.id);
 
@@ -135,6 +139,7 @@ export default function RemindersPage() {
             value: 15,
             unit: 'minutes',
             html_template: DEFAULT_TEMPLATE,
+            subject: 'Rappel pour votre appel avec {{host_name}}',
         };
         setReminders([...reminders, newReminder]);
     };
@@ -381,6 +386,16 @@ export default function RemindersPage() {
                                 </h4>
                                 <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8 space-y-6">
                                     <div className="space-y-4">
+                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest">Objet de l'email</label>
+                                        <input 
+                                            type="text"
+                                            value={manualSubject}
+                                            onChange={(e) => setManualSubject(e.target.value)}
+                                            placeholder="Ex: Rappel pour votre appel à {{time}}"
+                                            className="w-full px-6 py-4 bg-black border border-white/10 rounded-2xl text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-4">
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
                                                 <Code size={14} />
@@ -478,9 +493,20 @@ export default function RemindersPage() {
                                                     )}
                                                 </div>
 
-                                                {/* Template Editor */}
+                                                {/* Template & Subject Editor */}
                                                 <div className="space-y-4">
-                                                    <div className="flex items-center justify-between">
+                                                    <div className="space-y-4">
+                                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest">Objet de l'email</label>
+                                                        <input 
+                                                            type="text"
+                                                            value={reminder.subject || ''}
+                                                            onChange={(e) => updateReminder(reminder.id, { subject: e.target.value })}
+                                                            placeholder="Ex: Rappel: Rendez-vous avec {{host_name}}"
+                                                            className="w-full px-6 py-4 bg-black border border-white/10 rounded-2xl text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                                                        />
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between mt-6">
                                                         <label className="text-xs font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
                                                             <Code size={14} />
                                                             Contenu HTML du Mail

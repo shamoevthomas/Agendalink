@@ -93,27 +93,44 @@ export async function POST(req: Request) {
                     const htmlTemplate = config.html_template || '';
                     if (!htmlTemplate) continue;
 
-                    const finalHtml = htmlTemplate
-                        .replace(/{{name}}/g, email.split('@')[0] || 'Invité')
+                    const rawSubject = config.subject || `Confirmation : ${meeting.title}`;
+                    const guestName = email.split('@')[0] || 'Invité';
+                    
+                    const finalHtmlHost = htmlTemplate
+                        .replace(/{{name}}/g, guestName)
                         .replace(/{{host_name}}/g, hostName)
                         .replace(/{{host_bio}}/g, admin.bio || '')
                         .replace(/{{profile_img}}/g, admin.profile_image || '')
                         .replace(/{{social_links}}/g, socialHtml)
                         .replace(/{{time}}/g, meetingTime)
                         .replace(/{{meet_link}}/g, meeting.google_meet_link || '');
+                        
+                    // For the host copy, we could use hostName instead of guestName if we wanted, 
+                    // but guestName is better to know who booked it.
+                    const finalHtmlGuest = finalHtmlHost;
+
+                    const finalSubjectHost = rawSubject
+                        .replace(/{{name}}/g, guestName)
+                        .replace(/{{host_name}}/g, hostName)
+                        .replace(/{{time}}/g, meetingTime);
+                        
+                    const finalSubjectGuest = rawSubject
+                        .replace(/{{name}}/g, guestName)
+                        .replace(/{{host_name}}/g, hostName)
+                        .replace(/{{time}}/g, meetingTime);
 
                     // Send to the guest who just booked
                     await sendEmail({
                         to: [{ email: email }],
-                        subject: `Confirmation : ${meeting.title}`,
-                        htmlContent: finalHtml,
+                        subject: finalSubjectGuest,
+                        htmlContent: finalHtmlGuest,
                     });
 
                     // Also send to the host
                     await sendEmail({
                         to: [{ email: admin.email }],
-                        subject: `Nouveau RDV : ${meeting.title} avec ${email}`,
-                        htmlContent: finalHtml,
+                        subject: finalSubjectHost,
+                        htmlContent: finalHtmlHost,
                     });
 
                     console.log(`[Join] at_booking email sent for ${meeting.title} to ${email} and ${admin.email}`);

@@ -149,7 +149,16 @@ export async function GET(request: Request) {
                                     meet_link: event.hangoutLink,
                                 };
 
-                                const finalHtml = (config.html_template || '')
+                                const finalHtmlHost = (config.html_template || '')
+                                    .replace(/{{name}}/g, hostName) // Name defaults to host for host email if we wanted, but we will use guestName realistically
+                                    .replace(/{{host_name}}/g, vars.host_name)
+                                    .replace(/{{host_bio}}/g, vars.host_bio)
+                                    .replace(/{{profile_img}}/g, vars.profile_img)
+                                    .replace(/{{social_links}}/g, vars.social_links)
+                                    .replace(/{{time}}/g, vars.time)
+                                    .replace(/{{meet_link}}/g, vars.meet_link);
+
+                                const finalHtmlGuest = (config.html_template || '')
                                     .replace(/{{name}}/g, vars.name)
                                     .replace(/{{host_name}}/g, vars.host_name)
                                     .replace(/{{host_bio}}/g, vars.host_bio)
@@ -158,19 +167,30 @@ export async function GET(request: Request) {
                                     .replace(/{{time}}/g, vars.time)
                                     .replace(/{{meet_link}}/g, vars.meet_link);
 
+                                const rawSubject = config.subject || `Rappel : ${event.summary}`;
+                                const finalSubjectHost = rawSubject
+                                    .replace(/{{name}}/g, hostName)
+                                    .replace(/{{host_name}}/g, vars.host_name)
+                                    .replace(/{{time}}/g, vars.time);
+                                
+                                const finalSubjectGuest = rawSubject
+                                    .replace(/{{name}}/g, vars.name)
+                                    .replace(/{{host_name}}/g, vars.host_name)
+                                    .replace(/{{time}}/g, vars.time);
+
                                 // Send to host
                                 await sendEmail({
                                     to: [{ email: user.email }],
-                                    subject: `Rappel : ${event.summary}`,
-                                    htmlContent: finalHtml,
+                                    subject: finalSubjectHost,
+                                    htmlContent: finalHtmlHost,
                                 });
 
                                 // Send to guest if available
                                 if (guestEmail) {
                                     await sendEmail({
                                         to: [{ email: guestEmail }],
-                                        subject: `Rappel : ${event.summary}`,
-                                        htmlContent: finalHtml,
+                                        subject: finalSubjectGuest,
+                                        htmlContent: finalHtmlGuest,
                                     });
                                 }
 

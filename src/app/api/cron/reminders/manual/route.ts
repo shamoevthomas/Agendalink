@@ -82,17 +82,28 @@ export async function POST(request: Request) {
                 .replace(/{{meet_link}}/g, event.hangoutLink!);
         };
 
+        const rawSubject = user.manual_reminder_subject || `Rappel Manuel : ${event.summary}`;
+        const finalSubjectHost = rawSubject
+            .replace(/{{name}}/g, hostName)
+            .replace(/{{host_name}}/g, hostName)
+            .replace(/{{time}}/g, meetingTimeStr);
+            
+        const finalSubjectGuest = rawSubject
+            .replace(/{{name}}/g, guestName)
+            .replace(/{{host_name}}/g, hostName)
+            .replace(/{{time}}/g, meetingTimeStr);
+
         // 3. Send Emails
         await sendEmail({
             to: [{ email: hostEmail }],
-            subject: `Rappel Manuel : ${event.summary}`,
+            subject: finalSubjectHost,
             htmlContent: replaceVars(htmlTemplate, 'Hôte'),
         });
 
         if (guestEmail) {
             await sendEmail({
                 to: [{ email: guestEmail }],
-                subject: `Rappel Manuel : ${event.summary}`,
+                subject: finalSubjectGuest,
                 htmlContent: replaceVars(htmlTemplate, 'Invité'),
             });
         }
