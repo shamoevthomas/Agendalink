@@ -199,7 +199,7 @@ function DashboardContent() {
                 method: 'DELETE'
             });
             if (res.ok) {
-                setMeetings(meetings.filter(m => m.id !== id));
+                setMeetings(meetings.filter((m: any) => m.id !== id));
             } else {
                 alert('Erreur lors de la suppression');
             }
@@ -237,7 +237,7 @@ function DashboardContent() {
     const updateSocialLink = (index: number, field: string, value: string) => {
         const newLinks = [...profile.social_links];
         newLinks[index] = { ...newLinks[index], [field]: value };
-        setProfile(prev => ({ ...prev, social_links: newLinks }));
+        setProfile((prev: any) => ({ ...prev, social_links: newLinks }));
     };
 
     const [imageToCrop, setImageToCrop] = useState<string | null>(null);
@@ -245,9 +245,9 @@ function DashboardContent() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const removeSocialLink = (index: number) => {
-        setProfile(prev => ({
+        setProfile((prev: any) => ({
             ...prev,
-            social_links: prev.social_links.filter((_, i) => i !== index)
+            social_links: prev.social_links.filter((_: any, i: number) => i !== index)
         }));
     };
 
@@ -280,7 +280,7 @@ function DashboardContent() {
                 .from('profile-images')
                 .getPublicUrl(fileName);
 
-            setProfile(prev => ({ ...prev, profile_image: publicUrlData.publicUrl }));
+            setProfile((prev: any) => ({ ...prev, profile_image: publicUrlData.publicUrl }));
         } catch (err: any) {
             alert('Erreur lors de l\'upload : ' + err.message);
         } finally {
@@ -418,7 +418,7 @@ function DashboardContent() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-4">
-                            {meetings.map((meeting) => (
+                            {meetings.map((meeting: any) => (
                                 <div key={meeting.id} className="bg-[#111] border border-white/10 rounded-2xl p-5 md:p-6 hover:border-white/20 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-2">
@@ -599,7 +599,7 @@ function DashboardContent() {
                             </div>
 
                             <div className="space-y-4">
-                                {profile.social_links.map((link, idx) => (
+                                {profile.social_links.map((link: any, idx: number) => (
                                     <div key={idx} className="flex flex-col md:flex-row gap-4 p-4 bg-white/5 border border-white/10 rounded-2xl relative group">
                                         <button
                                             type="button"
