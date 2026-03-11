@@ -25,6 +25,11 @@ export default function MainDashboardPage() {
     const [customSlug, setCustomSlug] = useState('');
     const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
 
+    // Analytics State
+    const [analyticsMeeting, setAnalyticsMeeting] = useState<any>(null);
+    const [analyticsData, setAnalyticsData] = useState<{ views: number, joins: any[] } | null>(null);
+    const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
     useEffect(() => {
         fetchMeetings();
         fetchReminders();
@@ -167,6 +172,23 @@ export default function MainDashboardPage() {
         alert('Lien copié !');
     };
 
+    const openAnalytics = async (meeting: any) => {
+        setAnalyticsMeeting(meeting);
+        setAnalyticsLoading(true);
+        setAnalyticsData(null);
+        try {
+            const res = await fetch(`/api/admin/analytics/${meeting.id}`);
+            if (res.ok) {
+                const data = await res.json();
+                setAnalyticsData(data);
+            }
+        } catch (err) {
+            console.error('Analytics error:', err);
+        } finally {
+            setAnalyticsLoading(false);
+        }
+    };
+
     return (
         <div className="space-y-10 animate-in fade-in duration-500 pb-20">
             {/* Page Header */}
@@ -220,11 +242,15 @@ export default function MainDashboardPage() {
                     ) : (
                         <div className="divide-y divide-white/5">
                             {meetings.slice(0, 5).map((meeting: any) => (
-                                <div key={meeting.id} className="grid grid-cols-4 sm:grid-cols-5 p-4 items-center text-sm hover:bg-white/[0.02] transition-colors">
-                                    <div className="text-gray-400">
+                                <div 
+                                    key={meeting.id} 
+                                    onClick={() => openAnalytics(meeting)}
+                                    className="grid grid-cols-4 sm:grid-cols-5 p-4 items-center text-sm hover:bg-white/[0.02] transition-all group cursor-pointer"
+                                >
+                                    <div className="text-gray-400 group-hover:text-white transition-colors">
                                         {new Date(meeting.meeting_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
                                     </div>
-                                    <div className="text-gray-400">
+                                    <div className="text-gray-400 group-hover:text-white transition-colors">
                                         {meeting.meeting_time.substring(0, 5)}
                                     </div>
                                     <div className="col-span-2 sm:col-span-1 font-bold text-white truncate pr-4">
@@ -237,7 +263,7 @@ export default function MainDashboardPage() {
                                             <span className="px-2 py-1 bg-blue-500/10 text-blue-500 text-[10px] font-bold rounded border border-blue-500/20">En attente</span>
                                         )}
                                     </div>
-                                    <div className="text-right text-gray-500 font-medium text-xs flex items-center justify-end gap-3">
+                                    <div className="text-right text-gray-500 font-medium text-xs flex items-center justify-end gap-3" onClick={(e) => e.stopPropagation()}>
                                         <button 
                                             onClick={() => copyLink(meeting.share_id)}
                                             className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-blue-400 font-bold transition-all flex items-center gap-1.5"
@@ -245,7 +271,7 @@ export default function MainDashboardPage() {
                                             <Copy size={12} />
                                             Lien
                                         </button>
-                                        <Link href="/admin/dashboard" className="hover:text-white transition-colors">Gérer</Link>
+                                        <div className="hover:text-white transition-colors font-bold text-blue-500">Stats</div>
                                     </div>
                                 </div>
                             ))}
@@ -463,6 +489,96 @@ export default function MainDashboardPage() {
                                 {formLoading ? <Loader2 className="animate-spin" size={24} /> : 'Créer et Synchroniser'}
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* Analytics Modal */}
+            {analyticsMeeting && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                    <div className="bg-[#0a0a0a] w-full max-w-2xl border border-white/10 rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-8 pb-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-blue-500/10 text-blue-500 rounded-2xl">
+                                    <BarChart2 size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold text-white">Statistiques</h3>
+                                    <p className="text-sm text-gray-500">{analyticsMeeting.title}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setAnalyticsMeeting(null)} className="p-2 hover:bg-white/5 rounded-xl text-gray-500 hover:text-white transition-all">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="p-8 space-y-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                            {analyticsLoading ? (
+                                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                    <Loader2 className="animate-spin text-blue-500" size={40} />
+                                    <p className="text-gray-500 font-medium">Chargement des données...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="p-6 bg-[#111] border border-white/5 rounded-3xl group hover:border-white/10 transition-all">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Ouvertures du lien</p>
+                                            <p className="text-5xl font-black text-white tracking-tighter">{analyticsData?.views || 0}</p>
+                                        </div>
+                                        <div className="p-6 bg-blue-500/5 border border-blue-500/10 rounded-3xl group hover:border-blue-500/20 transition-all">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500/70 mb-2">Inscriptions (Emails)</p>
+                                            <p className="text-5xl font-black text-blue-500 tracking-tighter">{analyticsData?.joins?.length || 0}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-gray-400">
+                                            <Plus size={18} />
+                                            <h4 className="font-bold tracking-tight">Liste des participants</h4>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {analyticsData?.joins && analyticsData.joins.length > 0 ? (
+                                                analyticsData.joins.map((join: any, i: number) => (
+                                                    <div key={i} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl group hover:border-white/10 transition-all">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-10 bg-blue-600/10 text-blue-500 rounded-xl flex items-center justify-center font-bold">
+                                                                {join.email[0].toUpperCase()}
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <p className="text-sm font-bold text-gray-200">{join.email}</p>
+                                                                {join.phone && (
+                                                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 text-blue-400 rounded-lg text-xs font-bold border border-blue-500/20">
+                                                                        <Phone size={12} />
+                                                                        {join.phone}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-[10px] text-gray-600 font-bold uppercase">
+                                                            {new Date(join.created_at).toLocaleDateString()} <br/>
+                                                            <span className="opacity-50">{new Date(join.created_at).toLocaleTimeString().slice(0, 5)}</span>
+                                                        </p>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-center py-10 bg-white/5 border border-dashed border-white/10 rounded-3xl">
+                                                    <p className="text-gray-500 text-sm font-medium">Aucun participant pour le moment</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="p-8 pt-0">
+                            <button
+                                onClick={() => setAnalyticsMeeting(null)}
+                                className="w-full py-5 bg-white text-black font-black text-lg rounded-2xl hover:bg-gray-200 transition-all active:scale-[0.98]"
+                            >
+                                Fermer
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

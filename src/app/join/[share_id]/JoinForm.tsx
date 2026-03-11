@@ -48,21 +48,33 @@ export default function JoinForm({ meeting, shareId }: JoinFormProps) {
             description: meeting.description,
             date: meeting.meeting_date,
             time: meeting.meeting_time,
+            duration: meeting.duration,
         });
     };
 
     if (joined) {
         return (
-            <div className="bg-green-500/10 border border-green-500/20 rounded-3xl p-8 text-center animate-in fade-in zoom-in duration-300">
-                <div className="w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/20">
+            <div className="bg-green-500/10 border border-green-500/20 rounded-[32px] p-8 text-center animate-in fade-in zoom-in duration-500">
+                <div className="w-16 h-16 bg-green-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-500/20 rotate-3 group-hover:rotate-0 transition-transform">
                     <CheckCircle2 size={32} />
                 </div>
                 <h3 className="text-2xl font-bold mb-2">C'est confirmé !</h3>
-                <p className="text-gray-400 mb-6">
+                <p className="text-gray-400 mb-8 leading-relaxed">
                     Vous avez été ajouté à la réunion. Google va vous envoyer une invitation par mail d'ici quelques instants.
                 </p>
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-sm text-gray-400">
-                    Pensez à vérifier vos spams si vous ne recevez rien.
+                
+                <div className="space-y-4">
+                    <button
+                        onClick={handleAppleClick}
+                        className="w-full py-5 bg-white text-black font-black text-sm rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-200 transition-all shadow-xl shadow-white/5 active:scale-[0.98]"
+                    >
+                        <Calendar size={18} />
+                        Ajouter à mon Apple Calendar
+                    </button>
+                    
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-[11px] text-gray-500 italic">
+                        Pensez à vérifier vos spams si vous ne recevez rien.
+                    </div>
                 </div>
             </div>
         );
@@ -110,31 +122,13 @@ export default function JoinForm({ meeting, shareId }: JoinFormProps) {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-5 bg-white text-black font-bold rounded-2xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2 disabled:bg-gray-500 shadow-xl shadow-white/5"
+                        className="w-full py-5 bg-white text-black font-black text-lg rounded-2xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2 disabled:bg-gray-500 shadow-xl shadow-white/5 active:scale-[0.98]"
                     >
-                        {loading ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
+                        {loading ? <Loader2 className="animate-spin" size={24} /> : <Send size={24} />}
                         Confirmer ma présence
                     </button>
                 </form>
-                {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-
-            </div>
-
-            {/* Alternative */}
-            <div className="space-y-4 pt-4">
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
-                    <div className="relative flex justify-center text-xs uppercase tracking-widest text-gray-600 bg-[#111] px-4">Ou ajouter manuellement</div>
-                </div>
-                <div className="flex flex-col gap-3 pt-2">
-                    <button
-                        onClick={handleAppleClick}
-                        className="w-full py-4 bg-white/5 border border-white/10 text-white font-bold rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-all group"
-                    >
-                        <Calendar size={20} className="text-gray-400 group-hover:text-white transition-colors" />
-                        Télécharger le fichier .ics (Apple / Outlook)
-                    </button>
-                </div>
+                {error && <p className="text-red-500 text-sm text-center font-bold tracking-tight">{error}</p>}
             </div>
         </div>
     );

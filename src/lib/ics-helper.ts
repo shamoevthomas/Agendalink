@@ -3,9 +3,10 @@ export function generateICS(meeting: {
     description: string;
     date: string;
     time: string;
+    duration?: number;
 }) {
     const startDateTime = new Date(`${meeting.date}T${meeting.time}:00`);
-    const endDateTime = new Date(startDateTime.getTime() + 30 * 60000);
+    const endDateTime = new Date(startDateTime.getTime() + (meeting.duration || 30) * 60000);
 
     const formatDate = (date: Date) => {
         return date.toISOString().replace(/-|:|\.\d\d\d/g, "");
