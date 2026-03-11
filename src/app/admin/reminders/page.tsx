@@ -272,15 +272,15 @@ export default function RemindersPage() {
                         </div>
 
                         {activeReminder && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="bg-[#111] border border-white/10 rounded-3xl p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {/* Trigger Logic */}
                                 <div className="space-y-4">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block">Type de déclencheur</label>
+                                    <label className="text-sm font-medium text-gray-400 block">Type de déclencheur</label>
                                     <div className="relative">
                                         <select 
                                             value={activeReminder.type}
                                             onChange={(e) => updateReminder(activeReminder.id, { type: e.target.value as ReminderType })}
-                                            className="w-full appearance-none px-5 py-4 bg-[#0f0f0f] border border-[#222] rounded-2xl text-white font-medium hover:border-[#444] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all cursor-pointer"
+                                            className="w-full appearance-none px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all cursor-pointer"
                                         >
                                             <option value="at_booking">Au moment de la réservation</option>
                                             <option value="before_event">Délai avant l'appel</option>
@@ -294,21 +294,21 @@ export default function RemindersPage() {
                                 {activeReminder.type === 'before_event' && (
                                     <div className="grid grid-cols-2 gap-4 animate-in fade-in zoom-in-95 duration-300">
                                         <div className="space-y-4">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block">Valeur</label>
+                                            <label className="text-sm font-medium text-gray-400 block">Valeur</label>
                                             <input 
                                                 type="number"
                                                 value={activeReminder.value}
                                                 onChange={(e) => updateReminder(activeReminder.id, { value: parseInt(e.target.value) })}
-                                                className="w-full px-5 py-4 bg-[#0f0f0f] border border-[#222] rounded-2xl text-white font-medium hover:border-[#444] focus:border-blue-500 outline-none transition-all"
+                                                className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                             />
                                         </div>
                                         <div className="space-y-4">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block">Unité</label>
+                                            <label className="text-sm font-medium text-gray-400 block">Unité</label>
                                             <div className="relative">
                                                 <select 
                                                     value={activeReminder.unit}
                                                     onChange={(e) => updateReminder(activeReminder.id, { unit: e.target.value as 'minutes'|'hours' })}
-                                                    className="w-full appearance-none px-5 py-4 bg-[#0f0f0f] border border-[#222] rounded-2xl text-white font-medium hover:border-[#444] focus:border-blue-500 outline-none transition-all cursor-pointer"
+                                                    className="w-full appearance-none px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all cursor-pointer"
                                                 >
                                                     <option value="minutes">Minutes</option>
                                                     <option value="hours">Heures</option>
@@ -321,20 +321,20 @@ export default function RemindersPage() {
 
                                 {/* Email Subject */}
                                 <div className="space-y-4">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block">Objet du Mail</label>
+                                    <label className="text-sm font-medium text-gray-400 block">Objet du Mail</label>
                                     <input 
                                         type="text"
                                         value={activeReminder.subject || ''}
                                         onChange={(e) => updateReminder(activeReminder.id, { subject: e.target.value })}
                                         placeholder="Rappel : Rendez-vous avec {{host_name}}"
-                                        className="w-full px-5 py-4 bg-[#0f0f0f] border border-[#222] rounded-2xl text-white font-medium hover:border-[#444] focus:border-blue-500 outline-none transition-all"
+                                        className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     />
                                 </div>
 
                                 {/* HTML Content Input */}
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block">Contenu HTML</label>
+                                        <label className="text-sm font-medium text-gray-400 block">Contenu HTML</label>
                                         
                                         <div className="relative">
                                             <button 
@@ -385,7 +385,7 @@ export default function RemindersPage() {
                                             renderPreview(e.target.value);
                                         }}
                                         spellCheck={false}
-                                        className="w-full h-[400px] px-5 py-4 bg-[#0a0a0a] border border-[#222] rounded-2xl text-[13px] font-mono text-gray-300 focus:border-blue-500 outline-none transition-all resize-y leading-relaxed"
+                                        className="w-full h-[400px] px-4 py-3 bg-black border border-white/10 rounded-xl text-sm font-mono text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-y leading-relaxed"
                                     />
                                 </div>
                             </div>
@@ -402,12 +402,12 @@ export default function RemindersPage() {
 
                 {/* RIGHT PANEL: LIVE PREVIEW */}
                 <div className="hidden lg:flex flex-1 flex-col bg-[#000000]">
-                    <div className="p-6 md:p-8 flex items-center justify-between border-b border-[#1a1a1a]">
-                        <h2 className="text-xl font-bold flex items-center gap-2">
-                           <Info size={20} className="text-gray-500" /> Aperçu en direct
+                    <div className="p-6 md:p-8 flex items-center justify-between border-b border-white/10">
+                        <h2 className="text-xl font-bold flex items-center gap-2 text-white">
+                           <Info size={20} className="text-blue-500" /> Aperçu en direct
                         </h2>
                         
-                        <div className="flex bg-[#111] p-1 rounded-xl border border-[#222]">
+                        <div className="flex bg-black p-1 rounded-xl border border-white/10">
                             <button 
                                 onClick={() => setViewMode('mobile')}
                                 className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${viewMode === 'mobile' ? 'bg-white text-black shadow-md' : 'text-gray-500 hover:text-white'}`}
@@ -483,10 +483,10 @@ export default function RemindersPage() {
                 {/* Automations List (Bulles) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {reminders.map((reminder) => (
-                        <div key={reminder.id} className="bg-[#0f0f0f] border border-[#1f1f1f] rounded-2xl p-6 flex flex-col justify-between transition-all group min-h-[220px]">
+                        <div key={reminder.id} className="bg-[#111] border border-white/10 rounded-3xl p-6 flex flex-col justify-between transition-all group min-h-[220px]">
                             <div>
                                 <div className="flex items-start justify-between mb-6">
-                                    <div className="w-10 h-10 bg-[#1f1f1f] rounded-xl flex items-center justify-center text-gray-400">
+                                    <div className="w-10 h-10 bg-black border border-white/5 rounded-xl flex items-center justify-center text-gray-400">
                                         {reminder.type === 'at_event' ? <Video size={18} /> : <Calendar size={18} />}
                                     </div>
                                     <button
@@ -537,7 +537,7 @@ export default function RemindersPage() {
                     {/* Add Reminder Card */}
                     <button 
                         onClick={addReminder}
-                        className="bg-transparent border border-dashed border-[#222] rounded-2xl p-6 flex flex-col items-center justify-center hover:border-[#444] transition-all hover:bg-white/[0.02] min-h-[220px]"
+                        className="bg-transparent border border-dashed border-white/10 rounded-3xl p-6 flex flex-col items-center justify-center hover:border-white/20 transition-all hover:bg-white/[0.02] min-h-[220px]"
                     >
                         <Plus className="w-6 h-6 text-gray-500 mb-3" />
                         <span className="text-gray-500 text-[11px] font-bold uppercase tracking-widest text-center">AJOUTER UN RAPPEL</span>
