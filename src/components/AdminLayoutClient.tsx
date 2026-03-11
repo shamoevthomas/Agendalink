@@ -34,49 +34,53 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     return (
         <div className="flex h-screen bg-[#050505] text-white overflow-hidden font-sans">
             {/* Sidebar */}
-            <aside className="w-[280px] border-r border-[#1a1a1a] bg-[#0a0a0a] hidden md:flex flex-col">
-                <div className="p-8 mb-4 flex items-center gap-4">
+            <aside className="group w-[88px] hover:w-[280px] transition-all duration-300 ease-in-out border-r border-[#1a1a1a] bg-[#0a0a0a] hidden md:flex flex-col shrink-0 overflow-hidden">
+                <div className="flex items-center gap-4 p-6 mb-4 whitespace-nowrap">
                     <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
                         <CalendarIcon />
                     </div>
-                    <div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <h2 className="font-bold text-[16px] leading-tight text-white tracking-wide">AgendaLink Admin</h2>
                         <p className="text-[11px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Administration</p>
                     </div>
                 </div>
                 
-                <nav className="flex-1 px-4 space-y-2">
+                <nav className="flex-1 px-4 space-y-2 overflow-hidden">
                     {navItems.map((item, idx) => {
                         const Icon = item.icon;
-                        const isActive = pathname === item.href && (idx !== 3 || pathname !== '/admin/dashboard');
                         const isReallyActive = pathname === item.href && (idx !== 3);
 
                         return (
                             <Link 
                                 key={idx} 
                                 href={item.href}
-                                className={`flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all font-bold text-sm ${
+                                className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all font-bold text-sm whitespace-nowrap overflow-hidden ${
                                     isReallyActive 
                                     ? 'bg-[#141414] text-white border border-[#222] shadow-sm' 
                                     : 'text-gray-400 hover:text-gray-200 hover:bg-white/[0.02]'
                                 }`}
+                                title={item.label}
                             >
-                                <Icon size={18} className={isReallyActive ? "text-blue-500" : "text-gray-500"} />
-                                {item.label}
+                                <div className="shrink-0 flex items-center justify-center w-6">
+                                    <Icon size={18} className={isReallyActive ? "text-blue-500" : "text-gray-500"} />
+                                </div>
+                                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    {item.label}
+                                </span>
                             </Link>
                         );
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-[#1a1a1a]">
-                    <p className="text-center text-[10px] uppercase tracking-widest text-gray-600 font-bold">
+                <div className="p-4 border-t border-[#1a1a1a] whitespace-nowrap overflow-hidden">
+                    <p className="text-center text-[10px] uppercase tracking-widest text-gray-600 font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         AgendaLink System &copy; 2026
                     </p>
                 </div>
             </aside>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col h-screen overflow-hidden">
+            <div className="flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300">
                 {/* Top Header */}
                 <header className="h-[80px] border-b border-[#1a1a1a] bg-[#0a0a0a]/90 backdrop-blur-xl flex items-center px-10 justify-between shrink-0">
                     <div className="flex items-center gap-2">
