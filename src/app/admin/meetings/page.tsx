@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { 
     Calendar, Clock, Video, BarChart2, Plus, 
-    Copy, X, Loader2, Phone, Pencil, Trash2, Send 
+    Copy, X, Loader2, Phone, Pencil, Trash2, Send, Search 
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -11,6 +11,8 @@ export default function MeetingsPage() {
     const [meetings, setMeetings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'planned' | 'past' | 'ongoing'>('all');
 
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -225,38 +227,95 @@ export default function MeetingsPage() {
         }
     };
 
+    const getStatus = (meeting: any) => {
+        const now = new Date();
+        const [hours, minutes] = meeting.meeting_time.split(':').map(Number);
+        const start = new Date(meeting.meeting_date);
+        start.setHours(hours, minutes, 0, 0);
+        const end = new Date(start.getTime() + (meeting.duration || 60) * 60000);
+
+        if (now >= start && now <= end) return 'ongoing';
+        if (now > end) return 'past';
+        return 'planned';
+    };
+
+    const filteredMeetings = meetings.filter(meeting => {
+        const matchesSearch = 
+            meeting.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            meeting.description?.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        const status = getStatus(meeting);
+        const matchesStatus = statusFilter === 'all' || statusFilter === status;
+
+        return matchesSearch && matchesStatus;
+    });
+
     return (
         <div className="space-y-10 animate-in fade-in duration-500 pb-20">
             {/* Page Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                    <Calendar className="text-blue-500" size={28} />
-                    Mes Rendez-vous
-                </h1>
-                <p className="text-gray-500 text-sm mt-1">Gérez l'ensemble de vos synchronisations et rendez-vous.</p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                        <Calendar className="text-blue-500" size={28} />
+                        Mes Rendez-vous
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1">Gérez l'ensemble de vos synchronisations et rendez-vous.</p>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => setIsModalOpen(true)}
+                        className="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20"
+                    >
+                        <Plus size={16} />
+                        Nouveau
+                    </button>
+                    <button onClick={handleSync} disabled={loading} className="px-5 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50">
+                        <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        Actualiser
+                    </button>
+                </div>
             </div>
 
             {/* Content Section */}
             <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <button 
-                            onClick={() => setIsModalOpen(true)}
-                            className="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20"
-                        >
-                            <Plus size={16} />
-                            Nouveau Rendez-vous
-                        </button>
-                        <button onClick={handleSync} disabled={loading} className="px-5 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50">
-                            <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                            Actualiser
-                        </button>
+                {/* Search and Filters */}
+                <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="relative flex-1 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-500 transition-colors" size={18} />
+                        <input 
+                            type="text"
+                            placeholder="Rechercher par titre ou participant..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-12 pr-4 py-3.5 bg-[#111] border border-white/10 rounded-2xl text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+                        />
+                    </div>
+                    <div className="flex gap-2 p-1.5 bg-[#111] border border-white/10 rounded-2xl w-fit">
+                        {[
+                            { id: 'all', label: 'Tous' },
+                            { id: 'planned', label: 'Prévu' },
+                            { id: 'ongoing', label: 'En cours' },
+                            { id: 'past', label: 'Passé' }
+                        ].map((filter) => (
+                            <button
+                                key={filter.id}
+                                onClick={() => setStatusFilter(filter.id as any)}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                                    statusFilter === filter.id 
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                                        : 'text-gray-500 hover:text-gray-300'
+                                }`}
+                            >
+                                {filter.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                <div className="bg-[#111] border border-white/10 rounded-2xl overflow-hidden">
+                <div className="bg-[#111] border border-white/10 rounded-[32px] overflow-hidden">
                     {/* Table Header */}
-                    <div className="grid grid-cols-4 sm:grid-cols-5 p-4 border-b border-white/5 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                    <div className="grid grid-cols-4 sm:grid-cols-5 p-5 border-b border-white/5 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em]">
                         <div>Date</div>
                         <div>Heure</div>
                         <div className="col-span-2 sm:col-span-1">Participant</div>
@@ -266,15 +325,28 @@ export default function MeetingsPage() {
 
                     {/* Table Body */}
                     {loading ? (
-                        <div className="p-12 text-center text-gray-500">Chargement...</div>
-                    ) : meetings.length === 0 ? (
-                        <div className="p-12 text-center">
-                            <Calendar className="mx-auto mb-3 text-gray-600" size={32} />
-                            <p className="text-gray-500 font-medium">Aucun rendez-vous trouvé.</p>
+                        <div className="p-20 text-center">
+                            <Loader2 className="animate-spin text-blue-500 mx-auto mb-4" size={32} />
+                            <p className="text-gray-500 font-medium">Récupération des rendez-vous...</p>
+                        </div>
+                    ) : filteredMeetings.length === 0 ? (
+                        <div className="p-20 text-center">
+                            <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-white/10">
+                                <Calendar className="text-gray-600" size={32} />
+                            </div>
+                            <p className="text-gray-500 font-bold">Aucun rendez-vous trouvé.</p>
+                            {(searchQuery || statusFilter !== 'all') && (
+                                <button 
+                                    onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
+                                    className="text-blue-500 text-sm font-bold mt-2 hover:underline"
+                                >
+                                    Effacer les filtres
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className="divide-y divide-white/5">
-                            {meetings.map((meeting: any) => (
+                            {filteredMeetings.map((meeting: any) => (
                                 <div 
                                     key={meeting.id} 
                                     onClick={() => openAnalytics(meeting)}
@@ -291,21 +363,16 @@ export default function MeetingsPage() {
                                     </div>
                                     <div className="hidden sm:block">
                                         {(() => {
-                                            const now = new Date();
-                                            const [hours, minutes] = meeting.meeting_time.split(':').map(Number);
-                                            const start = new Date(meeting.meeting_date);
-                                            start.setHours(hours, minutes, 0, 0);
-                                            
-                                            const end = new Date(start.getTime() + (meeting.duration || 60) * 60000);
+                                            const status = getStatus(meeting);
 
-                                            if (now >= start && now <= end) {
+                                            if (status === 'ongoing') {
                                                 return (
                                                     <span className="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded border border-green-500/20 flex items-center gap-1.5 w-fit">
                                                         <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
                                                         En cours
                                                     </span>
                                                 );
-                                            } else if (now > end) {
+                                            } else if (status === 'past') {
                                                 return (
                                                     <span className="px-2 py-1 bg-white/5 text-gray-500 text-[10px] font-bold rounded border border-white/10 w-fit">
                                                         Passé
