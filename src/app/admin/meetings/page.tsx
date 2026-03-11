@@ -1,96 +1,65 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { 
+    Calendar, Clock, Video, BarChart2, Plus, 
+    Copy, X, Loader2, Phone, Pencil, Trash2, Send 
+} from 'lucide-react';
 import Link from 'next/link';
-import { Sparkles, Calendar, Clock, Video, BarChart2, Bell, Plus, Link as LinkIcon, Copy, X, Loader2, Phone, Pencil, Trash2, Send } from 'lucide-react';
 
-
-export default function MainDashboardPage() {
+export default function MeetingsPage() {
     const [meetings, setMeetings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [sendingReminder, setSendingReminder] = useState<string | null>(null);
 
-    const [reminders, setReminders] = useState<any[]>([]);
-    const [remindersLoading, setRemindersLoading] = useState(true);
-
-    // Meeting Creation State
+    // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formLoading, setFormLoading] = useState(false);
-    const [title, setTitle] = useState('');
-    const [date, setDate] = useState('');
-    const [time, setTime] = useState('');
-    const [description, setDescription] = useState('');
-    const [isGoogleMeet, setIsGoogleMeet] = useState(true);
-    const [requestPhone, setRequestPhone] = useState(false);
-    const [duration, setDuration] = useState(60);
-    const [customSlug, setCustomSlug] = useState('');
-    const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
-
-    // Analytics State
     const [analyticsMeeting, setAnalyticsMeeting] = useState<any>(null);
-    const [analyticsData, setAnalyticsData] = useState<{ views: number, joins: any[] } | null>(null);
+    const [analyticsData, setAnalyticsData] = useState<any>(null);
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
-    // Edit Meeting State
+    // Edit Modal states
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingMeeting, setEditingMeeting] = useState<any>(null);
     const [editDate, setEditDate] = useState('');
     const [editTime, setEditTime] = useState('');
     const [editDuration, setEditDuration] = useState(60);
 
-    // Delete Meeting State
+    // Delete Modal states
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingMeeting, setDeletingMeeting] = useState<any>(null);
 
-    // Manual Reminder State
-    const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+    // Create Form state
+    const [formLoading, setFormLoading] = useState(false);
+    const [title, setTitle] = useState('');
+    const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
+    const [duration, setDuration] = useState(60);
+    const [description, setDescription] = useState('');
+    const [isGoogleMeet, setIsGoogleMeet] = useState(true);
+    const [requestPhone, setRequestPhone] = useState(false);
+    const [customSlug, setCustomSlug] = useState('');
+    const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
 
     useEffect(() => {
         fetchMeetings();
-        fetchReminders();
-
-        // Auto-refresh every 30 seconds
-        const interval = setInterval(() => {
-            fetchMeetings();
-        }, 30000);
-        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
-        if (isModalOpen) {
-            // Set default date to tomorrow
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            setDate(tomorrow.toISOString().split('T')[0]);
-
-            // Set default time to current time rounded up to nearest 10 min
-            const now = new Date();
-            const minutes = now.getMinutes();
-            const roundedMinutes = Math.ceil(minutes / 10) * 10;
-            now.setMinutes(roundedMinutes);
-            now.setSeconds(0);
-
-            // Format time as HH:MM
-            const hours = String(now.getHours()).padStart(2, '0');
-            const mins = String(now.getMinutes()).padStart(2, '0');
-            setTime(`${hours}:${mins}`);
-
-            // Reset slug edit state
-            setIsSlugManuallyEdited(false);
-        }
-    }, [isModalOpen]);
-
-    // Auto-slug generation
-    useEffect(() => {
         if (!isSlugManuallyEdited && title) {
-            const slug = title.toLowerCase()
-                .replace(/[^a-z0-9]/g, '-')
-                .replace(/-+/g, '-')
-                .replace(/^-|-$/g, '');
+            const slug = title
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-p\s-]/g, "")
+                .trim()
+                .replace(/\s+/g, "-");
             setCustomSlug(slug);
         }
     }, [title, isSlugManuallyEdited]);
 
     const fetchMeetings = async () => {
+        setLoading(true);
         try {
             const res = await fetch('/api/meetings');
             if (res.ok) {
@@ -104,79 +73,17 @@ export default function MainDashboardPage() {
         }
     };
 
-    const fetchReminders = async () => {
-        try {
-            const res = await fetch('/api/admin/settings');
-            if (res.ok) {
-                const data = await res.json();
-                if (data.reminders_config) {
-                    setReminders(data.reminders_config);
-                }
-            }
-        } catch (err) {
-            console.error('Fetch reminders error:', err);
-        } finally {
-            setRemindersLoading(false);
-        }
-    };
-
     const handleSync = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/admin/settings');
+            const res = await fetch('/api/cron/reminders/sync');
             if (res.ok) {
-                const profile = await res.json();
-                if (profile.email) {
-                    await fetch(`/api/cron/reminders/sync?email=${profile.email}`);
-                }
+                await fetchMeetings();
             }
-            await fetchMeetings();
         } catch (err) {
             console.error('Sync error:', err);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleCreateMeeting = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setFormLoading(true);
-        try {
-            const res = await fetch('/api/meetings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title,
-                    date,
-                    time,
-                    description,
-                    isGoogleMeet,
-                    custom_slug: customSlug,
-                    request_phone: requestPhone,
-                    duration: duration
-                }),
-            });
-
-            if (res.ok) {
-                setIsModalOpen(false);
-                fetchMeetings();
-                // Reset form
-                setTitle('');
-                setDate('');
-                setTime('');
-                setDescription('');
-                setCustomSlug('');
-                setRequestPhone(false);
-                setDuration(60);
-                setIsSlugManuallyEdited(false);
-            } else {
-                const errorData = await res.json();
-                alert('Erreur: ' + errorData.error);
-            }
-        } catch (err) {
-            alert('Une erreur est survenue');
-        } finally {
-            setFormLoading(false);
         }
     };
 
@@ -189,7 +96,6 @@ export default function MainDashboardPage() {
     const openAnalytics = async (meeting: any) => {
         setAnalyticsMeeting(meeting);
         setAnalyticsLoading(true);
-        setAnalyticsData(null);
         try {
             const res = await fetch(`/api/admin/analytics/${meeting.id}`);
             if (res.ok) {
@@ -203,6 +109,46 @@ export default function MainDashboardPage() {
         }
     };
 
+    const handleCreateMeeting = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setFormLoading(true);
+        try {
+            const res = await fetch('/api/meetings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title,
+                    meeting_date: date,
+                    meeting_time: time,
+                    duration,
+                    description,
+                    is_google_meet: isGoogleMeet,
+                    request_phone: requestPhone,
+                    custom_slug: customSlug
+                }),
+            });
+
+            if (res.ok) {
+                setIsModalOpen(false);
+                setTitle('');
+                setDate('');
+                setTime('');
+                setDuration(60);
+                setDescription('');
+                setCustomSlug('');
+                setIsSlugManuallyEdited(false);
+                await fetchMeetings();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Erreur lors de la création');
+            }
+        } catch (err) {
+            alert('Une erreur est survenue');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
     const handleUpdateMeeting = async (e: React.FormEvent) => {
         e.preventDefault();
         setFormLoading(true);
@@ -212,21 +158,19 @@ export default function MainDashboardPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id: editingMeeting.id,
-                    date: editDate,
-                    time: editTime,
+                    meeting_date: editDate,
+                    meeting_time: editTime,
                     duration: editDuration
                 }),
             });
 
             if (res.ok) {
                 setIsEditModalOpen(false);
-                fetchMeetings();
+                await fetchMeetings();
             } else {
-                const data = await res.json();
-                alert(data.error || 'Erreur lors de la modification');
+                alert('Erreur lors de la modification');
             }
         } catch (err) {
-            console.error('Update meeting error:', err);
             alert('Une erreur est survenue');
         } finally {
             setFormLoading(false);
@@ -242,13 +186,11 @@ export default function MainDashboardPage() {
 
             if (res.ok) {
                 setIsDeleteModalOpen(false);
-                fetchMeetings();
+                await fetchMeetings();
             } else {
-                const data = await res.json();
-                alert(data.error || 'Erreur lors de la suppression');
+                alert('Erreur lors de la suppression');
             }
         } catch (err) {
-            console.error('Delete meeting error:', err);
             alert('Une erreur est survenue');
         } finally {
             setFormLoading(false);
@@ -288,18 +230,15 @@ export default function MainDashboardPage() {
             {/* Page Header */}
             <div>
                 <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                    <Sparkles className="text-blue-500" size={28} />
-                    Vue d'ensemble
+                    <Calendar className="text-blue-500" size={28} />
+                    Mes Rendez-vous
                 </h1>
+                <p className="text-gray-500 text-sm mt-1">Gérez l'ensemble de vos synchronisations et rendez-vous.</p>
             </div>
 
-            {/* Top Section: Meetings List */}
+            {/* Content Section */}
             <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold">Mes Rendez-vous</h2>
-                        <p className="text-gray-500 text-sm mt-1">Gérez vos synchronisations et vos prochains appels Meet.</p>
-                    </div>
                     <div className="flex items-center gap-3">
                         <button 
                             onClick={() => setIsModalOpen(true)}
@@ -331,11 +270,11 @@ export default function MainDashboardPage() {
                     ) : meetings.length === 0 ? (
                         <div className="p-12 text-center">
                             <Calendar className="mx-auto mb-3 text-gray-600" size={32} />
-                            <p className="text-gray-500 font-medium">Aucun rendez-vous à venir.</p>
+                            <p className="text-gray-500 font-medium">Aucun rendez-vous trouvé.</p>
                         </div>
                     ) : (
                         <div className="divide-y divide-white/5">
-                            {meetings.slice(0, 5).map((meeting: any) => (
+                            {meetings.map((meeting: any) => (
                                 <div 
                                     key={meeting.id} 
                                     onClick={() => openAnalytics(meeting)}
@@ -428,72 +367,9 @@ export default function MainDashboardPage() {
                         </div>
                     )}
                 </div>
-                {meetings.length > 5 && (
-                    <div className="text-center mt-2">
-                        <Link href="/admin/meetings" className="text-blue-500 text-sm font-bold hover:text-blue-400">
-                            Voir tous les rendez-vous →
-                        </Link>
-                    </div>
-                )}
             </div>
 
-            {/* Bottom Section: Reminders list */}
-            <div className="space-y-6 pt-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold flex items-center gap-3">
-                            Prochains Rappels Meet
-                        </h2>
-                    </div>
-                    <div>
-                        <span className="px-4 py-2 bg-green-500/10 border border-green-500/20 text-green-500 text-[11px] font-bold uppercase tracking-widest rounded-lg flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                            Automatisation active ({reminders.length})
-                        </span>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {remindersLoading ? (
-                        <div className="col-span-full p-12 text-center text-gray-500">Chargement des rappels...</div>
-                    ) : (
-                        <>
-                            {reminders.map((reminder) => (
-                                <div key={reminder.id} className="bg-[#111] border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-all flex flex-col justify-between">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-gray-400 border border-white/10">
-                                            {reminder.type === 'at_event' ? <Video size={20} /> : <Calendar size={20} />}
-                                        </div>
-                                        <div className="w-8 h-4 bg-blue-600 rounded-full relative">
-                                            <div className="absolute right-1 top-1 bottom-1 w-2 bg-white rounded-full" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-white mb-1">
-                                            {reminder.type === 'at_booking' ? 'À la réservation' : 
-                                             reminder.type === 'at_event' ? "Au moment de l'appel" : 
-                                             `${reminder.value} ${reminder.unit === 'minutes' ? 'Minutes' : 'Heures'} avant`}
-                                        </h3>
-                                        <p className="text-sm text-gray-500 line-clamp-2">
-                                            {reminder.subject || 'Rappel: Votre rendez-vous approche'}
-                                        </p>
-                                    </div>
-                                    <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
-                                        <Link href="/admin/reminders" className="text-blue-500 text-xs font-bold uppercase tracking-wider hover:text-blue-400 flex items-center gap-1">
-                                            Configurer
-                                        </Link>
-                                    </div>
-                                </div>
-                            ))}
-                            
-                            <Link href="/admin/reminders" className="border-2 border-dashed border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-gray-500 hover:text-white hover:border-white/20 hover:bg-white/[0.02] transition-all min-h-[160px] group">
-                                <Plus size={24} className="mb-2 group-hover:scale-110 transition-transform" />
-                                <span className="font-bold text-xs uppercase tracking-widest">Ajouter un rappel</span>
-                            </Link>
-                        </>
-                    )}
-                </div>
-            </div>
+            {/* Modals (Copy-pasted from MainDashboardPage) */}
             {/* Nouveau Rendez-vous Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
@@ -627,7 +503,6 @@ export default function MainDashboardPage() {
                                         placeholder="mon-appel-perso"
                                     />
                                 </div>
-                                <p className="text-[11px] text-gray-600 italic ml-1">Si vide, un lien unique sera généré automatiquement.</p>
                             </div>
 
                             <button
@@ -641,6 +516,7 @@ export default function MainDashboardPage() {
                     </div>
                 </div>
             )}
+
             {/* Analytics Modal */}
             {analyticsMeeting && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">

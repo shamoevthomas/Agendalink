@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Settings, User } from 'lucide-react';
+import { LayoutDashboard, Settings, User, Calendar, Clock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
@@ -26,7 +26,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
     const navItems = [
         { href: '/admin/main', icon: LayoutDashboard, label: 'Tableau de bord' },
-        { href: '/admin/reminders', icon: Settings, label: 'Rappels' },
+        { href: '/admin/meetings', icon: Calendar, label: 'Mes Rendez-vous' },
+        { href: '/admin/reminders', icon: Clock, label: 'Rappels' },
         { href: '/admin/dashboard', icon: Settings, label: 'Configuration' },
     ];
 
