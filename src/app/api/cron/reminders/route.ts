@@ -114,14 +114,19 @@ export async function GET(request: Request) {
                             try {
                                 console.log(`[Cron] Triggering ${config.type} reminder for ${event.summary}`);
                                 const guestEmail = event.attendees?.find(a => !a.self)?.email;
+                                const hostName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Votre hôte';
                                 const vars = {
                                     name: 'Invité',
+                                    host_name: hostName,
+                                    profile_img: user.profile_image || '',
                                     time: startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
                                     meet_link: event.hangoutLink,
                                 };
 
                                 const finalHtml = (config.html_template || '')
                                     .replace(/{{name}}/g, vars.name)
+                                    .replace(/{{host_name}}/g, vars.host_name)
+                                    .replace(/{{profile_img}}/g, vars.profile_img)
                                     .replace(/{{time}}/g, vars.time)
                                     .replace(/{{meet_link}}/g, vars.meet_link);
 

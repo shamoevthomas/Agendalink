@@ -54,9 +54,14 @@ export async function POST(request: Request) {
             </div>
         `;
 
+        const hostName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Votre hôte';
+        const profileImg = user.profile_image || '';
+
         const replaceVars = (html: string, name: string) => {
             return html
                 .replace(/{{name}}/g, name)
+                .replace(/{{host_name}}/g, hostName)
+                .replace(/{{profile_img}}/g, profileImg)
                 .replace(/{{time}}/g, meetingTimeStr)
                 .replace(/{{meet_link}}/g, event.hangoutLink!);
         };
