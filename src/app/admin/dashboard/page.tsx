@@ -31,9 +31,10 @@ function DashboardContent() {
     const error = searchParams.get('error');
 
     // Profile State
-    const [profile, setProfile] = useState({
+    const [profile, setProfile] = useState<any>({
         first_name: '',
         last_name: '',
+        email: '',
         bio: '',
         profile_image: '',
         social_links: [] as any[],
@@ -50,8 +51,30 @@ function DashboardContent() {
     useEffect(() => {
         fetchMeetings();
         fetchSettings();
+
+        // Auto-refresh every 30 seconds
+        const interval = setInterval(() => {
+            fetchMeetings();
+        }, 30000);
+
+        return () => clearInterval(interval);
     }, []);
 
+    // Also sync on mount if email is available
+    useEffect(() => {
+        if (profile.google_refresh_token && profile.email) {
+            syncMeetings(profile.email);
+        }
+    }, [profile.google_refresh_token, profile.email]);
+
+    const syncMeetings = async (email: string) => {
+        try {
+            await fetch(`/api/cron/reminders/sync?email=${email}`);
+            fetchMeetings();
+        } catch (err) {
+            console.error('Sync error:', err);
+        }
+    };
     useEffect(() => {
         if (isModalOpen) {
             // Set default date to tomorrow

@@ -12,13 +12,18 @@ export async function GET(request: Request) {
             .eq('reminders_enabled', true);
 
         if (usersError) throw usersError;
+        console.log(`[Cron] Found ${users?.length || 0} users with reminders enabled`);
 
         let totalProcessed = 0;
 
         for (const user of users) {
-            if (!user.google_refresh_token || !user.reminders_config || user.reminders_config.length === 0) continue;
+            if (!user.google_refresh_token || !user.reminders_config || user.reminders_config.length === 0) {
+                console.log(`[Cron] Skipping user ${user.email}: Missing token or config`);
+                continue;
+            }
 
             try {
+                console.log(`[Cron] Processing user ${user.email}`);
                 const calendar = await getCalendarClient(user.google_refresh_token);
                 const now = new Date();
                 const timeMin = now.toISOString();
@@ -33,15 +38,21 @@ export async function GET(request: Request) {
                     orderBy: 'startTime',
                 });
 
-                if (!events) continue;
+                if (!events || events.length === 0) {
+                    console.log(`[Cron] No upcoming events found for ${user.email}`);
+                    continue;
+                }
+
+                console.log(`[Cron] Found ${events.length} events for ${user.email}`);
 
                 for (const event of events) {
                     if (!event.hangoutLink) continue;
 
                     const startTime = new Date(event.start?.dateTime || event.start?.date || '');
                     const diffMins = Math.floor((startTime.getTime() - now.getTime()) / (1000 * 60));
+                    console.log(`[Cron] Event: ${event.summary}, starts in ${diffMins} mins`);
 
-                    // Get meeting record to track sent reminders
+                    // Get or create meeting record
                     let { data: meeting } = await supabaseAdmin
                         .from('al_meetings')
                         .select('*')
@@ -49,8 +60,9 @@ export async function GET(request: Request) {
                         .single();
 
                     if (!meeting) {
+                        console.log(`[Cron] Local meeting record not found for ${event.id}, creating...`);
                         const guestEmail = event.attendees?.find(a => !a.self)?.email;
-                        const { data: newMeeting } = await supabaseAdmin
+                        const { data: newMeeting, error: insertError } = await supabaseAdmin
                             .from('al_meetings')
                             .insert({
                                 google_event_id: event.id,
@@ -64,73 +76,86 @@ export async function GET(request: Request) {
                             })
                             .select()
                             .single();
+                        
+                        if (insertError) {
+                            console.error(`[Cron] Failed to create meeting record:`, insertError);
+                            continue;
+                        }
                         meeting = newMeeting;
                     }
 
-                    const sentReminders = meeting?.sent_reminders || [];
-                    const isNewMeeting = !meeting;
+                    if (!meeting) continue;
+
+                    const currentSentReminders = meeting.sent_reminders || [];
+                    const newSentReminders = [...currentSentReminders];
+                    let meetingUpdated = false;
 
                     // 3. Process each configured reminder
-                    for (const config of user.reminders_config) {
-                        if (sentReminders.includes(config.id)) continue;
+                    for (let i = 0; i < user.reminders_config.length; i++) {
+                        const config = user.reminders_config[i];
+                        const reminderId = config.id || `${config.type}_${config.value}_${i}`; // Fallback ID
+
+                        if (newSentReminders.includes(reminderId)) {
+                            continue;
+                        }
 
                         let shouldSend = false;
 
                         if (config.type === 'at_event') {
-                            // Send if event starts within +/- 5 minutes
-                            if (diffMins <= 5 && diffMins >= -5) {
-                                shouldSend = true;
-                            }
+                            if (diffMins <= 5 && diffMins >= -5) shouldSend = true;
                         } else if (config.type === 'before_event') {
                             const configMins = config.unit === 'hours' ? config.value * 60 : config.value;
-                            // Check window of 15 minutes
-                            if (diffMins <= configMins && diffMins >= configMins - 15) {
-                                shouldSend = true;
-                            }
+                            if (diffMins <= configMins && diffMins >= configMins - 15) shouldSend = true;
                         } else if (config.type === 'at_booking') {
-                            // Only send 'at_booking' if this is the first time we see this meeting 
-                            // OR if it's an existing meeting but this specific reminder hasn't been sent.
                             shouldSend = true;
                         }
 
                         if (shouldSend) {
-                            const guestEmail = event.attendees?.find(a => !a.self)?.email;
-                            const vars = {
-                                name: 'Invité',
-                                time: startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-                                meet_link: event.hangoutLink,
-                            };
+                            try {
+                                console.log(`[Cron] Triggering ${config.type} reminder for ${event.summary}`);
+                                const guestEmail = event.attendees?.find(a => !a.self)?.email;
+                                const vars = {
+                                    name: 'Invité',
+                                    time: startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                                    meet_link: event.hangoutLink,
+                                };
 
-                            const finalHtml = config.html_template
-                                .replace(/{{name}}/g, vars.name)
-                                .replace(/{{time}}/g, vars.time)
-                                .replace(/{{meet_link}}/g, vars.meet_link);
+                                const finalHtml = (config.html_template || '')
+                                    .replace(/{{name}}/g, vars.name)
+                                    .replace(/{{time}}/g, vars.time)
+                                    .replace(/{{meet_link}}/g, vars.meet_link);
 
-                            // Send to host
-                            await sendEmail({
-                                to: [{ email: user.email }],
-                                subject: `Rappel : ${event.summary}`,
-                                htmlContent: finalHtml,
-                            });
-
-                            // Send to guest if available
-                            if (guestEmail) {
+                                // Send to host
                                 await sendEmail({
-                                    to: [{ email: guestEmail }],
+                                    to: [{ email: user.email }],
                                     subject: `Rappel : ${event.summary}`,
                                     htmlContent: finalHtml,
                                 });
-                            }
 
-                            // Update tracking
-                            sentReminders.push(config.id);
-                            await supabaseAdmin
-                                .from('al_meetings')
-                                .update({ sent_reminders: sentReminders })
-                                .eq('id', meeting.id);
-                            
-                            totalProcessed++;
+                                // Send to guest if available
+                                if (guestEmail) {
+                                    await sendEmail({
+                                        to: [{ email: guestEmail }],
+                                        subject: `Rappel : ${event.summary}`,
+                                        htmlContent: finalHtml,
+                                    });
+                                }
+
+                                newSentReminders.push(reminderId);
+                                meetingUpdated = true;
+                                totalProcessed++;
+                                console.log(`[Cron] Successfully sent reminder for ${event.summary}`);
+                            } catch (remErr) {
+                                console.error(`[Cron] Error sending specific reminder:`, remErr);
+                            }
                         }
+                    }
+
+                    if (meetingUpdated) {
+                        await supabaseAdmin
+                            .from('al_meetings')
+                            .update({ sent_reminders: newSentReminders })
+                            .eq('id', meeting.id);
                     }
                 }
 
