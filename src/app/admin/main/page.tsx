@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Sparkles, Calendar, Clock, Video, BarChart2, Bell, Plus, Link as LinkIcon, Copy, X, Loader2 } from 'lucide-react';
+import { Sparkles, Calendar, Clock, Video, BarChart2, Bell, Plus, Link as LinkIcon, Copy, X, Loader2, Phone } from 'lucide-react';
 
 
 export default function MainDashboardPage() {
@@ -322,58 +322,125 @@ export default function MainDashboardPage() {
             {/* Nouveau Rendez-vous Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                    <div className="bg-[#111] w-full max-w-lg border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                            <h3 className="text-xl font-bold">Nouveau Rendez-vous</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-xl text-gray-400 hover:text-white transition-all">
-                                <X size={20} />
+                    <div className="bg-[#0a0a0a] w-full max-w-lg border border-white/10 rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-8 pb-4 flex items-center justify-between">
+                            <h3 className="text-2xl font-bold text-white">Nouveau Rendez-vous</h3>
+                            <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-xl text-gray-500 hover:text-white transition-all">
+                                <X size={24} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleCreateMeeting} className="p-6 space-y-5">
+                        <form onSubmit={handleCreateMeeting} className="p-8 pt-4 space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Titre</label>
+                                <label className="text-[13px] font-medium text-gray-400 ml-1">Titre</label>
                                 <input
                                     required
                                     type="text"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                    placeholder="Ex: Appel de découverte"
+                                    className="w-full px-5 py-4 bg-black border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all placeholder:text-gray-700"
+                                    placeholder="Appel de découverte"
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1 flex items-center gap-2">
-                                        <Calendar size={12} /> Date
-                                    </label>
-                                    <input
-                                        required
-                                        type="date"
-                                        value={date}
-                                        onChange={(e) => setDate(e.target.value)}
-                                        className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all [color-scheme:dark]"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1 flex items-center gap-2">
-                                        <Clock size={12} /> Heure
-                                    </label>
-                                    <input
-                                        required
-                                        type="time"
-                                        value={time}
-                                        onChange={(e) => setTime(e.target.value)}
-                                        className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all [color-scheme:dark]"
-                                    />
-                                </div>
+                            <div className="space-y-2">
+                                <label className="text-[13px] font-medium text-gray-400 ml-1 flex items-center gap-2">
+                                    <Calendar size={14} className="text-gray-500" /> Date
+                                </label>
+                                <input
+                                    required
+                                    type="date"
+                                    value={date}
+                                    onChange={(e) => setDate(e.target.value)}
+                                    className="w-full px-5 py-4 bg-black border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all [color-scheme:dark]"
+                                />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Lien d'invitation personnalisé</label>
-                                <div className="flex items-center gap-2 px-4 py-3 bg-black border border-white/10 rounded-xl group focus-within:ring-2 focus-within:ring-blue-500 transition-all">
-                                    <span className="text-gray-500 text-sm">agendalink.app/join/</span>
+                                <label className="text-[13px] font-medium text-gray-400 ml-1 flex items-center gap-2">
+                                    <Clock size={14} className="text-gray-500" /> Heure
+                                </label>
+                                <input
+                                    required
+                                    type="time"
+                                    value={time}
+                                    onChange={(e) => setTime(e.target.value)}
+                                    className="w-full px-5 py-4 bg-black border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all [color-scheme:dark]"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[13px] font-medium text-gray-400 ml-1 flex items-center gap-2">
+                                    <Clock size={14} className="text-gray-500" /> Durée
+                                </label>
+                                <select
+                                    value={duration}
+                                    onChange={(e) => setDuration(parseInt(e.target.value))}
+                                    className="w-full px-5 py-4 bg-black border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value={15}>15 minutes</option>
+                                    <option value={30}>30 minutes</option>
+                                    <option value={45}>45 minutes</option>
+                                    <option value={60}>1h</option>
+                                    <option value={90}>1h30</option>
+                                    <option value={120}>2h</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[13px] font-medium text-gray-400 ml-1">Description (Optionnel)</label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    className="w-full px-5 py-4 bg-black border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all min-h-[120px] resize-none placeholder:text-gray-700"
+                                    placeholder="Sujet de la réunion..."
+                                />
+                            </div>
+
+                            <div className="space-y-4">
+                                {/* Google Meet Toggle */}
+                                <div className="flex items-center justify-between p-5 bg-[#111]/50 border border-white/5 rounded-2xl hover:border-white/10 transition-all">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all ${isGoogleMeet ? 'bg-blue-600/10 border-blue-600/20 text-blue-500' : 'bg-white/5 border-white/10 text-gray-500'}`}>
+                                            <Video size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-white text-sm">Générer un lien Google Meet</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsGoogleMeet(!isGoogleMeet)}
+                                        className={`w-14 h-7 rounded-full relative transition-all duration-300 px-1 ${isGoogleMeet ? 'bg-blue-600' : 'bg-gray-700'}`}
+                                    >
+                                        <div className={`w-5 h-5 bg-white rounded-full transition-all duration-300 ${isGoogleMeet ? 'translate-x-7' : 'translate-x-0'}`} />
+                                    </button>
+                                </div>
+
+                                {/* Phone Request Toggle */}
+                                <div className="flex items-center justify-between p-5 bg-[#111]/50 border border-white/5 rounded-2xl hover:border-white/10 transition-all">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all ${requestPhone ? 'bg-blue-600/10 border-blue-600/20 text-blue-500' : 'bg-white/5 border-white/10 text-gray-500'}`}>
+                                            <Phone size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-white text-sm">Demander le numéro de téléphone <span className="text-gray-600 font-medium">(Optionnel)</span></p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setRequestPhone(!requestPhone)}
+                                        className={`w-14 h-7 rounded-full relative transition-all duration-300 px-1 ${requestPhone ? 'bg-blue-600' : 'bg-gray-700'}`}
+                                    >
+                                        <div className={`w-5 h-5 bg-white rounded-full transition-all duration-300 ${requestPhone ? 'translate-x-7' : 'translate-x-0'}`} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 pt-2">
+                                <label className="text-[13px] font-medium text-gray-400 ml-1">Lien personnalisé (Optionnel)</label>
+                                <div className="flex items-center gap-3 px-5 py-4 bg-black border border-white/10 rounded-2xl group focus-within:ring-2 focus-within:ring-blue-500/50 transition-all">
+                                    <span className="text-gray-600 text-sm font-medium">/join/</span>
                                     <input
                                         type="text"
                                         value={customSlug}
@@ -381,37 +448,19 @@ export default function MainDashboardPage() {
                                             setCustomSlug(e.target.value);
                                             setIsSlugManuallyEdited(true);
                                         }}
-                                        className="flex-1 bg-transparent border-none outline-none text-white text-sm p-0"
-                                        placeholder="mon-appel"
+                                        className="flex-1 bg-transparent border-none outline-none text-white text-sm p-0 placeholder:text-gray-700 font-medium"
+                                        placeholder="mon-appel-perso"
                                     />
                                 </div>
-                            </div>
-
-                            <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${isGoogleMeet ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' : 'bg-white/5 border-white/10 text-gray-500'}`}>
-                                        <Video size={20} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold">Lien Google Meet</p>
-                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest">Généré automatiquement</p>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsGoogleMeet(!isGoogleMeet)}
-                                    className={`w-12 h-6 rounded-full relative transition-all duration-300 ${isGoogleMeet ? 'bg-blue-600' : 'bg-gray-700'}`}
-                                >
-                                    <div className={`absolute top-1 bottom-1 w-4 bg-white rounded-full transition-all duration-300 ${isGoogleMeet ? 'right-1' : 'left-1'}`} />
-                                </button>
+                                <p className="text-[11px] text-gray-600 italic ml-1">Si vide, un lien unique sera généré automatiquement.</p>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={formLoading}
-                                className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2 mt-4 shadow-xl shadow-white/5 disabled:opacity-50"
+                                className="w-full py-5 bg-white text-black font-black text-lg rounded-2xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2 mt-8 shadow-2xl shadow-white/5 disabled:opacity-50"
                             >
-                                {formLoading ? <Loader2 className="animate-spin" size={20} /> : 'Créer et Synchroniser'}
+                                {formLoading ? <Loader2 className="animate-spin" size={24} /> : 'Créer et Synchroniser'}
                             </button>
                         </form>
                     </div>
