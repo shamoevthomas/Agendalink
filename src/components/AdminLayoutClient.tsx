@@ -109,8 +109,10 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-y-auto w-full">
-                    {children}
+                <main className="flex-1 overflow-y-auto w-full p-6 md:p-10">
+                    <div className="max-w-7xl mx-auto w-full">
+                        {children}
+                    </div>
                 </main>
             </div>
         </div>
