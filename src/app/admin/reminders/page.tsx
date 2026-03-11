@@ -577,9 +577,6 @@ export default function RemindersPage() {
                 <button className="px-1 py-4 text-white font-bold border-b-2 border-blue-500">
                     À venir
                 </button>
-                <button className="px-1 py-4 text-gray-500 hover:text-white font-medium transition-colors">
-                    Passés
-                </button>
                 <button 
                     onClick={() => setShowConfig(true)}
                     className="px-1 py-4 text-gray-500 hover:text-white font-medium transition-colors flex items-center gap-2"

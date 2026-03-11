@@ -28,7 +28,6 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         { href: '/admin/main', icon: LayoutDashboard, label: 'Tableau de bord' },
         { href: '/admin/reminders', icon: Bell, label: 'Rappels' },
         { href: '/admin/dashboard', icon: Settings, label: 'Configuration' },
-        { href: '/admin/dashboard#profile', icon: User, label: 'Profil' },
     ];
 
     return (
