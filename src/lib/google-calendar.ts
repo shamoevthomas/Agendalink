@@ -88,6 +88,56 @@ export async function createCalendarEvent(auth: any, meeting: any) {
     };
 }
 
+export async function updateCalendarEvent(auth: any, eventId: string, meeting: any) {
+    const calendar = google.calendar({ version: 'v3', auth });
+
+    const duration = meeting.duration || 60;
+    const date = meeting.meeting_date || meeting.date;
+    const time = meeting.meeting_time || meeting.time;
+    
+    const startLocal = `${date}T${time}:00`;
+
+    const [h, m] = time.split(':').map(Number);
+    const totalMinutes = h * 60 + m + duration;
+    const endH = Math.floor(totalMinutes / 60) % 24;
+    const endM = totalMinutes % 60;
+    const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+    const dayOverflow = totalMinutes >= 24 * 60;
+    const endDate = dayOverflow
+        ? new Date(new Date(date).getTime() + 86400000).toISOString().split('T')[0]
+        : date;
+    const endLocal = `${endDate}T${endTime}:00`;
+
+    const event: any = {
+        summary: meeting.title,
+        description: meeting.description,
+        start: {
+            dateTime: startLocal,
+            timeZone: 'Europe/Paris',
+        },
+        end: {
+            dateTime: endLocal,
+            timeZone: 'Europe/Paris',
+        },
+    };
+
+    const res = await calendar.events.patch({
+        calendarId: 'primary',
+        eventId: eventId,
+        requestBody: event,
+    });
+
+    return res.data;
+}
+
+export async function deleteCalendarEvent(auth: any, eventId: string) {
+    const calendar = google.calendar({ version: 'v3', auth });
+    await calendar.events.delete({
+        calendarId: 'primary',
+        eventId: eventId,
+    });
+}
+
 export async function insertMeetingIntoGoogleCalendar(refreshToken: string, meeting: any) {
     const auth = new google.auth.OAuth2(
         process.env.GOOGLE_CLIENT_ID,

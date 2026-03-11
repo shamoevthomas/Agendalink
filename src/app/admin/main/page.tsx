@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Sparkles, Calendar, Clock, Video, BarChart2, Bell, Plus, Link as LinkIcon, Copy, X, Loader2, Phone } from 'lucide-react';
+import { Sparkles, Calendar, Clock, Video, BarChart2, Bell, Plus, Link as LinkIcon, Copy, X, Loader2, Phone, Pencil, Trash2 } from 'lucide-react';
 
 
 export default function MainDashboardPage() {
@@ -29,6 +29,17 @@ export default function MainDashboardPage() {
     const [analyticsMeeting, setAnalyticsMeeting] = useState<any>(null);
     const [analyticsData, setAnalyticsData] = useState<{ views: number, joins: any[] } | null>(null);
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+    // Edit Meeting State
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingMeeting, setEditingMeeting] = useState<any>(null);
+    const [editDate, setEditDate] = useState('');
+    const [editTime, setEditTime] = useState('');
+    const [editDuration, setEditDuration] = useState(60);
+
+    // Delete Meeting State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deletingMeeting, setDeletingMeeting] = useState<any>(null);
 
     useEffect(() => {
         fetchMeetings();
@@ -189,6 +200,58 @@ export default function MainDashboardPage() {
         }
     };
 
+    const handleUpdateMeeting = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setFormLoading(true);
+        try {
+            const res = await fetch('/api/meetings', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: editingMeeting.id,
+                    date: editDate,
+                    time: editTime,
+                    duration: editDuration
+                }),
+            });
+
+            if (res.ok) {
+                setIsEditModalOpen(false);
+                fetchMeetings();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Erreur lors de la modification');
+            }
+        } catch (err) {
+            console.error('Update meeting error:', err);
+            alert('Une erreur est survenue');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const handleDeleteMeeting = async () => {
+        setFormLoading(true);
+        try {
+            const res = await fetch(`/api/meetings?id=${deletingMeeting.id}`, {
+                method: 'DELETE',
+            });
+
+            if (res.ok) {
+                setIsDeleteModalOpen(false);
+                fetchMeetings();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Erreur lors de la suppression');
+            }
+        } catch (err) {
+            console.error('Delete meeting error:', err);
+            alert('Une erreur est survenue');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
     return (
         <div className="space-y-10 animate-in fade-in duration-500 pb-20">
             {/* Page Header */}
@@ -271,7 +334,27 @@ export default function MainDashboardPage() {
                                             <Copy size={12} />
                                             Lien
                                         </button>
-                                        <div className="hover:text-white transition-colors font-bold text-blue-500">Stats</div>
+                                        <button 
+                                            onClick={() => {
+                                                setEditingMeeting(meeting);
+                                                setEditDate(meeting.meeting_date);
+                                                setEditTime(meeting.meeting_time.substring(0, 5));
+                                                setEditDuration(meeting.duration || 60);
+                                                setIsEditModalOpen(true);
+                                            }}
+                                            className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all"
+                                        >
+                                            <Pencil size={14} />
+                                        </button>
+                                        <button 
+                                            onClick={() => {
+                                                setDeletingMeeting(meeting);
+                                                setIsDeleteModalOpen(true);
+                                            }}
+                                            className="p-2 bg-white/5 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-rose-500 transition-all"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -577,6 +660,113 @@ export default function MainDashboardPage() {
                                 className="w-full py-5 bg-white text-black font-black text-lg rounded-2xl hover:bg-gray-200 transition-all active:scale-[0.98]"
                             >
                                 Fermer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Meeting Modal */}
+            {isEditModalOpen && editingMeeting && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                    <div className="bg-[#0a0a0a] w-full max-w-lg border border-white/10 rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-8 pb-4 flex items-center justify-between">
+                            <h3 className="text-2xl font-bold text-white">Modifier le rendez-vous</h3>
+                            <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-white/5 rounded-xl text-gray-500 hover:text-white transition-all">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdateMeeting} className="p-8 pt-4 space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[13px] font-medium text-gray-400 ml-1 flex items-center gap-2">
+                                    <Calendar size={14} className="text-gray-500" /> Date
+                                </label>
+                                <input
+                                    required
+                                    type="date"
+                                    value={editDate}
+                                    onChange={(e) => setEditDate(e.target.value)}
+                                    className="w-full px-5 py-4 bg-black border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all [color-scheme:dark]"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[13px] font-medium text-gray-400 ml-1 flex items-center gap-2">
+                                    <Clock size={14} className="text-gray-500" /> Heure
+                                </label>
+                                <input
+                                    required
+                                    type="time"
+                                    value={editTime}
+                                    onChange={(e) => setEditTime(e.target.value)}
+                                    className="w-full px-5 py-4 bg-black border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all [color-scheme:dark]"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[13px] font-medium text-gray-400 ml-1 flex items-center gap-2">
+                                    <Clock size={14} className="text-gray-500" /> Durée
+                                </label>
+                                <select
+                                    value={editDuration}
+                                    onChange={(e) => setEditDuration(parseInt(e.target.value))}
+                                    className="w-full px-5 py-4 bg-black border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value={15}>15 minutes</option>
+                                    <option value={30}>30 minutes</option>
+                                    <option value={45}>45 minutes</option>
+                                    <option value={60}>1h</option>
+                                    <option value={90}>1h30</option>
+                                    <option value={120}>2h</option>
+                                </select>
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditModalOpen(false)}
+                                    className="flex-1 py-4 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 transition-all"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={formLoading}
+                                    className="flex-1 py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all disabled:opacity-50"
+                                >
+                                    {formLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : 'Enregistrer'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {isDeleteModalOpen && deletingMeeting && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                    <div className="bg-[#0a0a0a] w-full max-w-sm border border-white/10 rounded-[32px] shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
+                        <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            <Trash2 size={32} />
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">Supprimer le rendez-vous ?</h3>
+                        <p className="text-gray-500 text-sm mb-8">
+                            Cette action est irréversible et supprimera également l'événement sur Google Agenda.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={handleDeleteMeeting}
+                                disabled={formLoading}
+                                className="w-full py-4 bg-rose-600 text-white font-bold rounded-2xl hover:bg-rose-700 transition-all disabled:opacity-50"
+                            >
+                                {formLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : 'Supprimer définitivement'}
+                            </button>
+                            <button
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                className="w-full py-4 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 transition-all"
+                            >
+                                Annuler
                             </button>
                         </div>
                     </div>

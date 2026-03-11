@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getGoogleAuth, createCalendarEvent } from '@/lib/google-calendar';
+import { getGoogleAuth, createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '@/lib/google-calendar';
 
 export async function POST(request: Request) {
     try {
@@ -117,6 +117,64 @@ export async function GET() {
     return NextResponse.json(data);
 }
 
+export async function PATCH(request: Request) {
+    try {
+        const { id, date, time, duration, title, description } = await request.json();
+
+        if (!id) {
+            return NextResponse.json({ error: 'Missing meeting id' }, { status: 400 });
+        }
+
+        // 1. Get existing meeting
+        const { data: meeting, error: fetchError } = await supabaseAdmin
+            .from('al_meetings')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !meeting) {
+            return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
+        }
+
+        // 2. Update DB
+        const updateData: any = {};
+        if (date) updateData.meeting_date = date;
+        if (time) updateData.meeting_time = time;
+        if (duration) updateData.duration = duration;
+        if (title) updateData.title = title;
+        if (description !== undefined) updateData.description = description;
+
+        const { data: updatedMeeting, error: updateError } = await supabaseAdmin
+            .from('al_meetings')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (updateError) {
+            return NextResponse.json({ error: updateError.message }, { status: 500 });
+        }
+
+        // 3. Sync to Google Calendar if event exists
+        if (meeting.google_event_id && meeting.host_email) {
+            try {
+                const auth = await getGoogleAuth(meeting.host_email);
+                await updateCalendarEvent(auth, meeting.google_event_id, {
+                    ...updatedMeeting,
+                    date: updatedMeeting.meeting_date,
+                    time: updatedMeeting.meeting_time
+                });
+            } catch (googleError) {
+                console.error('Google Update Sync Error:', googleError);
+            }
+        }
+
+        return NextResponse.json({ success: true, meeting: updatedMeeting });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
 export async function DELETE(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -126,6 +184,24 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: 'Missing meeting id' }, { status: 400 });
         }
 
+        // 1. Get meeting to get google_event_id
+        const { data: meeting } = await supabaseAdmin
+            .from('al_meetings')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        // 2. Delete from Google Calendar if sync exists
+        if (meeting?.google_event_id && meeting?.host_email) {
+            try {
+                const auth = await getGoogleAuth(meeting.host_email);
+                await deleteCalendarEvent(auth, meeting.google_event_id);
+            } catch (googleError) {
+                console.error('Google Delete Sync Error:', googleError);
+            }
+        }
+
+        // 3. Delete from Supabase
         const { error } = await supabaseAdmin
             .from('al_meetings')
             .delete()
