@@ -124,6 +124,7 @@ export async function POST(req: Request) {
                         to: [{ email: email }],
                         subject: finalSubjectGuest,
                         htmlContent: finalHtmlGuest,
+                        sender: { name: hostName, email: 'support@closeos.fr' }
                     });
 
                     // Also send to the host
@@ -131,6 +132,7 @@ export async function POST(req: Request) {
                         to: [{ email: admin.email }],
                         subject: finalSubjectHost,
                         htmlContent: finalHtmlHost,
+                        sender: { name: hostName, email: 'support@closeos.fr' }
                     });
 
                     console.log(`[Join] at_booking email sent for ${meeting.title} to ${email} and ${admin.email}`);

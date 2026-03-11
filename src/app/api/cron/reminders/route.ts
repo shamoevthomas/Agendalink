@@ -183,6 +183,7 @@ export async function GET(request: Request) {
                                     to: [{ email: user.email }],
                                     subject: finalSubjectHost,
                                     htmlContent: finalHtmlHost,
+                                    sender: { name: hostName, email: 'support@closeos.fr' }
                                 });
 
                                 // Send to guest if available
@@ -191,6 +192,7 @@ export async function GET(request: Request) {
                                         to: [{ email: guestEmail }],
                                         subject: finalSubjectGuest,
                                         htmlContent: finalHtmlGuest,
+                                        sender: { name: hostName, email: 'support@closeos.fr' }
                                     });
                                 }
 

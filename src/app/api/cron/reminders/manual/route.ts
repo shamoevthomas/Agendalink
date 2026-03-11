@@ -98,6 +98,7 @@ export async function POST(request: Request) {
             to: [{ email: hostEmail }],
             subject: finalSubjectHost,
             htmlContent: replaceVars(htmlTemplate, 'Hôte'),
+            sender: { name: hostName, email: 'support@closeos.fr' }
         });
 
         if (guestEmail) {
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
                 to: [{ email: guestEmail }],
                 subject: finalSubjectGuest,
                 htmlContent: replaceVars(htmlTemplate, 'Invité'),
+                sender: { name: hostName, email: 'support@closeos.fr' }
             });
         }
 
