@@ -2,10 +2,10 @@
     "name": "AgendaLink",
     "short_name": "AgendaLink",
     "description": "Prenez rendez-vous en toute simplicité.",
-    "start_url": "/admin/dashboard",
+    "start_url": "/admin/main",
     "display": "standalone",
     "background_color": "#0a0a0a",
-    "theme_color": "#0a0a0a",
+    "theme_color": "#2563eb",
     "icons": [
         {
             "src": "/logo.png",
