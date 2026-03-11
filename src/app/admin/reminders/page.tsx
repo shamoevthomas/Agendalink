@@ -53,13 +53,11 @@ export default function RemindersPage() {
     const [manualTemplate, setManualTemplate] = useState(DEFAULT_TEMPLATE);
     const [manualSubject, setManualSubject] = useState('');
     const [previewContent, setPreviewContent] = useState<string | null>(null);
-    const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
-    
-    // Editor State
+
+    // New Configuration Page State
     const [activeReminderId, setActiveReminderId] = useState<string | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
-    
-    // Test Email State
+    const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
     const [showTestMenu, setShowTestMenu] = useState(false);
     const [testEmail, setTestEmail] = useState('');
     const [sendingTest, setSendingTest] = useState(false);
@@ -152,8 +150,6 @@ export default function RemindersPage() {
             subject: 'Rappel pour votre appel avec {{host_name}}',
         };
         setReminders([...reminders, newReminder]);
-        setActiveReminderId(newReminder.id);
-        setIsEditorOpen(true);
     };
 
     const updateReminder = (id: string, updates: Partial<ReminderConfig>) => {
@@ -218,14 +214,10 @@ export default function RemindersPage() {
         setPreviewContent(finalHtml);
     };
 
-// This entire section (lines 209-229) is moved down, conditional rendering is added
-
-// List view rendering logic has moved further down in RemindersPage.
-
     const activeReminder = reminders.find(r => r.id === activeReminderId);
 
     const renderEditorView = () => (
-        <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center">
+        <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center w-full absolute inset-0 z-50">
             {/* Split Screen Container */}
             <div className="flex flex-col lg:flex-row w-full max-w-[1400px] h-screen bg-[#050505]">
                 
@@ -433,8 +425,8 @@ export default function RemindersPage() {
                     
                     <div className="flex-1 overflow-auto p-10 flex justify-center items-start bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-opacity-5">
                        <div 
-                           className={`bg-white rounded-3xl overflow-hidden shadow-2xl origin-top transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${viewMode === 'mobile' ? 'w-[375px]' : 'w-full max-w-[800px]'}`}
-                           style={{ minHeight: '600px', border: '8px solid #1a1a1a' }}
+                           className={`bg-white rounded-[40px] overflow-hidden shadow-2xl origin-top transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${viewMode === 'mobile' ? 'w-[375px]' : 'w-full max-w-[800px]'}`}
+                           style={{ minHeight: '600px', border: '12px solid #1a1a1a' }}
                        >
                            {/* Decorative fake browser bar for PC view */}
                            {viewMode === 'desktop' && (
@@ -462,38 +454,36 @@ export default function RemindersPage() {
         </div>
     );
 
-    if (loading) return (
-        <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-        </div>
-    );
-
-    return isEditorOpen ? renderEditorView() : (
-        <div className="min-h-screen bg-[#050505] text-white p-6 md:p-10">
+    const renderAutomationsList = () => (
+        <div className="min-h-screen bg-[#050505] text-white p-6 md:p-10 absolute inset-0 z-50 overflow-y-auto">
             <div className="max-w-5xl mx-auto space-y-10">
                 {/* Header Section */}
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <Bell className="text-blue-500 w-6 h-6" /> {/* Using Bell here, you might need to import it if not already */}
-                        Prochains Rappels Meet
-                    </h1>
+                <div className="flex items-center justify-between mb-8 pb-8 border-b border-[#1a1a1a]">
+                    <div className="flex items-center gap-4">
+                        <button 
+                            onClick={() => setShowConfig(false)}
+                            className="w-10 h-10 rounded-full border border-[#222] flex items-center justify-center hover:bg-[#111] transition-colors"
+                        >
+                            <ArrowLeft size={16} className="text-gray-400" />
+                        </button>
+                        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                            <Bell className="text-blue-500 w-6 h-6" /> 
+                            Prochains Rappels Meet
+                        </h1>
+                    </div>
                     
                     <div className="flex items-center gap-4">
-                        <div className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider ${settings?.reminders_enabled ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-white/5 text-gray-500 border border-white/10'}`}>
+                        <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${settings?.reminders_enabled ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-white/5 text-gray-500 border border-white/10'}`}>
                             {settings?.reminders_enabled ? <div className="w-2 h-2 rounded-full bg-green-500 mr-1" /> : <div className="w-2 h-2 rounded-full bg-gray-500 mr-1" />}
-                            {settings?.reminders_enabled ? `Automatisation active (${reminders.length})` : 'Automatisation désactivée'}
+                            {settings?.reminders_enabled ? `AUTOMATISATION ACTIVE (${reminders.length})` : 'AUTOMATISATION DÉSACTIVÉE'}
                         </div>
                     </div>
                 </div>
 
-                {/* Removed Navigation Tabs - wait, it's not in the screenshot! */}
-
-
-
                 {/* Automations List (Bulles) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {reminders.map((reminder) => (
-                        <div key={reminder.id} className="bg-[#0f0f0f] border-none rounded-[16px] p-6 flex flex-col justify-between transition-all group min-h-[220px]">
+                        <div key={reminder.id} className="bg-[#0f0f0f] border border-[#1f1f1f] rounded-2xl p-6 flex flex-col justify-between transition-all group min-h-[220px]">
                             <div>
                                 <div className="flex items-start justify-between mb-6">
                                     <div className="w-10 h-10 bg-[#1f1f1f] rounded-xl flex items-center justify-center text-gray-400">
@@ -502,7 +492,7 @@ export default function RemindersPage() {
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            // TODO: implement individual toggle if needed
+                                            // Optional individual toggle
                                         }}
                                         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors bg-blue-600`}
                                     >
@@ -518,21 +508,27 @@ export default function RemindersPage() {
                                     </h3>
                                     <p className="text-[13px] text-gray-400 leading-relaxed font-medium">
                                         {reminder.type === 'at_booking' ? "Votre entretien avec {{host_name}} a été confirmé avec succès." :
-                                         reminder.type === 'at_event' ? "Votre entretien avec {{host_name}} a commencé" :
+                                         reminder.type === 'at_event' ? "Votre entretien avec {{host_name}} à commencé" :
                                          `Votre entretien avec {{host_name}} est prévu dans {{time}}.`}
                                     </p>
                                 </div>
                             </div>
                             
-                            <div className="pt-2">
+                            <div className="pt-4 flex items-center justify-between border-t border-[#1f1f1f]">
                                 <button 
                                     onClick={() => {
                                         setActiveReminderId(reminder.id);
                                         setIsEditorOpen(true);
                                     }}
-                                    className="text-blue-500 text-[11px] font-bold hover:text-blue-400 transition-colors uppercase tracking-widest"
+                                    className="text-blue-500 text-[11px] font-black hover:text-blue-400 transition-colors uppercase tracking-widest"
                                 >
-                                    Configurer
+                                    CONFIGURER
+                                </button>
+                                <button 
+                                    onClick={() => removeReminder(reminder.id)}
+                                    className="p-2 text-gray-500 hover:text-red-500 hover:bg-black rounded-lg transition-colors"
+                                >
+                                    <Trash2 size={14} />
                                 </button>
                             </div>
                         </div>
@@ -541,13 +537,163 @@ export default function RemindersPage() {
                     {/* Add Reminder Card */}
                     <button 
                         onClick={addReminder}
-                        className="bg-black border border-dashed border-[#222] rounded-[16px] p-6 flex flex-col items-center justify-center hover:border-[#444] transition-all hover:bg-white/[0.02] min-h-[220px]"
+                        className="bg-transparent border border-dashed border-[#222] rounded-2xl p-6 flex flex-col items-center justify-center hover:border-[#444] transition-all hover:bg-white/[0.02] min-h-[220px]"
                     >
                         <Plus className="w-6 h-6 text-gray-500 mb-3" />
-                        <span className="text-gray-500 text-[11px] font-bold uppercase tracking-widest text-center">Ajouter un rappel</span>
+                        <span className="text-gray-500 text-[11px] font-bold uppercase tracking-widest text-center">AJOUTER UN RAPPEL</span>
                     </button>
                 </div>
             </div>
         </div>
     );
+
+    const renderConfigPage = () => {
+        if (isEditorOpen && activeReminderId) {
+            return renderEditorView();
+        }
+        return renderAutomationsList();
+    };
+
+    if (loading) return (
+        <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        </div>
+    );
+
+    if (showConfig) {
+        return renderConfigPage();
+    }
+
+    return (
+        <div className="min-h-screen bg-[#050505] text-white p-6 md:p-10">
+            <div className="max-w-5xl mx-auto space-y-10">
+                {/* Header Section */}
+                <div className="space-y-4">
+                    <h1 className="text-5xl font-black tracking-tighter text-white mb-2">
+                        Mes Rappels Meet
+                    </h1>
+                    
+                    <div className="flex items-center gap-4">
+                        <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium ${settings?.reminders_enabled ? 'bg-blue-900/30 text-blue-500 border border-blue-900/50' : 'bg-white/5 text-gray-500 border border-white/10'}`}>
+                            {settings?.reminders_enabled ? <CheckCircle2 className="w-4 h-4 text-blue-500" /> : <AlertCircle className="w-4 h-4 text-gray-500" />}
+                            {settings?.reminders_enabled ? 'Automatisation active' : 'Automatisation désactivée'}
+                        </div>
+                        <span className="text-[#a1a1aa] text-sm font-medium">Synchronisé avec Google Calendar</span>
+                    </div>
+                </div>
+
+                {/* Navigation Tabs */}
+                <div className="flex items-center gap-8 border-b border-[#1a1a1a]">
+                    <button className="px-1 py-4 text-white font-bold border-b-2 border-blue-600">
+                        À venir
+                    </button>
+                    <button className="px-1 py-4 text-gray-500 hover:text-gray-300 font-medium transition-colors">
+                        Passés
+                    </button>
+                    <button 
+                        onClick={() => setShowConfig(true)}
+                        className="px-1 py-4 text-gray-500 hover:text-gray-300 font-medium transition-colors"
+                    >
+                        Paramètres
+                    </button>
+                </div>
+
+                {/* Meetings List */}
+                <div className="space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                         <h2 className="text-xl font-bold text-white tracking-tight">Prochains 30 jours</h2>
+                         <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{meetings.length} RAPPELS PRÉVUS</span>
+                    </div>
+
+                    {meetings.length === 0 ? (
+                        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-20 text-center">
+                            <Calendar className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+                            <p className="text-gray-500 font-medium">Aucun appel Google Meet détecté.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {meetings.map((meeting: any, idx: number) => {
+                                const startTime = new Date(meeting.start_time);
+                                const month = startTime.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '').toUpperCase();
+                                const day = startTime.getDate().toString().padStart(2, '0');
+                                const time = startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
+
+                                return (
+                                    <div key={idx} className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-[#333] transition-all group">
+                                        <div className="flex items-start md:items-center gap-5">
+                                            {/* Date Box */}
+                                            <div className="w-[4.25rem] h-[4.25rem] bg-[#111827] rounded-xl flex flex-col items-center justify-center shrink-0 border border-[#1e293b]">
+                                                <span className="text-[#94a3b8] text-[10px] font-bold uppercase tracking-widest leading-none mb-1">{month}</span>
+                                                <span className="text-white text-2xl font-extrabold leading-none">{day}</span>
+                                            </div>
+
+                                            {/* Info */}
+                                            <div className="space-y-1.5">
+                                                <div className="flex flex-col md:flex-row md:items-center gap-2.5">
+                                                    <span className="w-fit px-2 py-0.5 bg-blue-900/30 text-blue-400 text-[10px] font-bold rounded">MEET</span>
+                                                    <h3 className="text-[15px] font-bold text-white uppercase tracking-wider">{meeting.title || 'RÉUNION SANS TITRE'}</h3>
+                                                </div>
+                                                <div className="text-[13px] text-gray-400 font-medium flex items-center gap-2">
+                                                    <span>{time}</span>
+                                                    <span>•</span>
+                                                    <span>{meeting.guest_email || 'Pas d\'invité détecté'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={() => sendManualReminder(meeting.google_event_id)}
+                                                disabled={sendingReminder === meeting.google_event_id}
+                                                className="px-4 py-2 bg-transparent border border-white/10 text-gray-300 font-medium rounded-lg hover:border-white/20 hover:bg-white/5 transition-all text-xs flex items-center gap-2"
+                                            >
+                                                {sendingReminder === meeting.google_event_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                                                Rappel manuel
+                                            </button>
+                                            
+                                            <div className="group/dropdown relative">
+                                                <button className="p-2 text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center">
+                                                    <MoreVertical className="w-5 h-5" />
+                                                </button>
+                                                <div className="absolute right-0 top-full mt-2 w-48 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all z-10 flex flex-col p-1 overflow-hidden">
+                                                    <a 
+                                                        href={meeting.google_meet_link} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="px-4 py-2 hover:bg-white/5 text-sm text-gray-300 hover:text-white flex items-center gap-2 rounded-lg"
+                                                    >
+                                                        <ExternalLink className="w-4 h-4" />
+                                                        Ouvrir le Meet
+                                                    </a>
+                                                    {meeting.event_url && (
+                                                        <a 
+                                                            href={meeting.event_url} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="px-4 py-2 hover:bg-white/5 text-sm text-gray-300 hover:text-white flex items-center gap-2 rounded-lg"
+                                                        >
+                                                            <Calendar className="w-4 h-4" />
+                                                            Éditer sur Google Agenda
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                    
+                    <div className="mt-8 border border-dashed border-[#222] rounded-2xl p-8 flex items-center justify-center">
+                        <p className="text-sm text-gray-500 italic">Fin des rappels pour la période sélectionnée</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* ADVANCED CONFIG MODAL - REPLACED BY FULL PAGE OVERLAY */}
+            {/* PREVIEW MODAL - REPLACED BY SPLIT SCREEN */}
+        </div>
+    );
 }
+
