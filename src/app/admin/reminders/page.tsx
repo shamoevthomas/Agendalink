@@ -92,7 +92,11 @@ export default function RemindersPage() {
             if (data.success) {
                 setMeetings(data.meetings);
                 // Trigger immediate reminder check for this user
-                await fetch(`/api/cron/reminders?user_email=${email}`);
+                await fetch(`/api/cron/reminders?user_email=${email}`, {
+                    headers: {
+                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET}`
+                    }
+                });
             }
         } catch (err) {
             console.error('Sync error:', err);

@@ -7,6 +7,13 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const forceUserEmail = searchParams.get('user_email');
+        const authHeader = request.headers.get('Authorization');
+        const cronSecret = process.env.CRON_SECRET;
+
+        if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+            console.error('[Cron] Unauthorized: Invalid or missing CRON_SECRET');
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
         // 1. Fetch users with reminders enabled
         let query = supabaseAdmin
