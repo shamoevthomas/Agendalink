@@ -7,13 +7,6 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const forceUserEmail = searchParams.get('user_email');
-        const authHeader = request.headers.get('Authorization');
-        const cronSecret = process.env.CRON_SECRET;
-
-        if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-            console.error('[Cron] Unauthorized: Invalid or missing CRON_SECRET');
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
 
         // 1. Fetch users with reminders enabled
         let query = supabaseAdmin
@@ -170,7 +163,6 @@ export async function GET(request: Request) {
                                     to: [{ email: user.email }],
                                     subject: `Rappel : ${event.summary}`,
                                     htmlContent: finalHtml,
-                                    sender: { name: hostName, email: user.email }
                                 });
 
                                 // Send to guest if available
@@ -179,7 +171,6 @@ export async function GET(request: Request) {
                                         to: [{ email: guestEmail }],
                                         subject: `Rappel : ${event.summary}`,
                                         htmlContent: finalHtml,
-                                        sender: { name: hostName, email: user.email }
                                     });
                                 }
 
