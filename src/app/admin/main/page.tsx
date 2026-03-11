@@ -375,7 +375,6 @@ export default function MainDashboardPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-2xl font-bold flex items-center gap-3">
-                            <Bell className="text-blue-500" size={24} />
                             Prochains Rappels Meet
                         </h2>
                     </div>

@@ -515,7 +515,6 @@ export default function RemindersPage() {
             {/* Automations List */}
             <div className="bg-[#111] border border-white/10 rounded-3xl p-6 md:p-8 space-y-6">
                 <h3 className="text-xl font-bold flex items-center gap-2 mb-2">
-                    <Bell size={20} className="text-blue-500" />
                     Modèles et Déclencheurs
                 </h3>
                 
@@ -634,7 +633,6 @@ export default function RemindersPage() {
             {/* Header Section */}
             <div>
                 <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                    <Bell className="text-blue-500" size={28} />
                     Mes Rappels Meet
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">Gérez vos rappels automatisés et vos réunions à venir</p>

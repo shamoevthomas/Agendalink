@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Bell, Settings, User } from 'lucide-react';
+import { LayoutDashboard, Settings, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
@@ -26,7 +26,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
     const navItems = [
         { href: '/admin/main', icon: LayoutDashboard, label: 'Tableau de bord' },
-        { href: '/admin/reminders', icon: Bell, label: 'Rappels' },
+        { href: '/admin/reminders', icon: Settings, label: 'Rappels' },
         { href: '/admin/dashboard', icon: Settings, label: 'Configuration' },
     ];
 
@@ -86,9 +86,6 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                         {/* Title will be dynamic per page ideally, but we can leave this empty or put a global search */}
                     </div>
                     <div className="flex items-center gap-6">
-                        <button className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
-                            <Bell size={18} />
-                        </button>
                         <div className="flex items-center gap-3 bg-[#111] p-1.5 pr-4 rounded-full border border-white/5">
                             <div className="w-9 h-9 rounded-full bg-white/10 overflow-hidden shrink-0">
                                 {profile?.profile_image ? (
