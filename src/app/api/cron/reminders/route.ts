@@ -115,10 +115,26 @@ export async function GET(request: Request) {
                                 console.log(`[Cron] Triggering ${config.type} reminder for ${event.summary}`);
                                 const guestEmail = event.attendees?.find(a => !a.self)?.email;
                                 const hostName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Votre hôte';
+                                const socialLinks = user.social_links || [];
+                                const socialHtml = socialLinks.length > 0 
+                                    ? `<table cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 0 auto;"><tr>${socialLinks.map((s: any) => `
+                                        <td style="padding: 0 5px;">
+                                            <a href="${s.url}" style="display: inline-block; padding: 8px 16px; background-color: #262626; border: 1px solid #333; border-radius: 12px; color: #ffffff; text-decoration: none; font-size: 10px; font-weight: bold; font-family: sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                ${s.platform}
+                                            </a>
+                                        </td>
+                                      `).join('')}</tr></table>`
+                                    : '';
+
+                                const guest = event.attendees?.find(a => !a.self);
+                                const guestName = guest?.displayName || 'Invité';
+
                                 const vars = {
-                                    name: 'Invité',
+                                    name: guestName,
                                     host_name: hostName,
+                                    host_bio: user.bio || '',
                                     profile_img: user.profile_image || '',
+                                    social_links: socialHtml,
                                     time: startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
                                     meet_link: event.hangoutLink,
                                 };
@@ -126,7 +142,9 @@ export async function GET(request: Request) {
                                 const finalHtml = (config.html_template || '')
                                     .replace(/{{name}}/g, vars.name)
                                     .replace(/{{host_name}}/g, vars.host_name)
+                                    .replace(/{{host_bio}}/g, vars.host_bio)
                                     .replace(/{{profile_img}}/g, vars.profile_img)
+                                    .replace(/{{social_links}}/g, vars.social_links)
                                     .replace(/{{time}}/g, vars.time)
                                     .replace(/{{meet_link}}/g, vars.meet_link);
 

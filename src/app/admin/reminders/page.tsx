@@ -165,11 +165,30 @@ export default function RemindersPage() {
     const renderPreview = (content: string) => {
         const previewVars = {
             name: "Jean Dupont",
+            host_name: `${settings.first_name || ''} ${settings.last_name || ''}`.trim() || 'Thomas Shamoev',
+            host_bio: settings.bio || 'Closer & Dev | CEO de CloseOS',
+            profile_img: settings.profile_image || 'https://via.placeholder.com/150',
             time: "14:30",
-            meet_link: "https://meet.google.com/abc-defg-hij"
+            meet_link: "https://meet.google.com/abc-defg-hij",
+            social_links: `
+                <table cellpadding="0" cellspacing="0" border="0" style="margin-top: 10px;">
+                    <tr>
+                        <td style="padding-right: 10px;">
+                            <a href="#" style="display: inline-block; padding: 6px 12px; background-color: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; color: #475569; text-decoration: none; font-size: 11px; font-weight: bold;">LINKEDIN</a>
+                        </td>
+                        <td style="padding-right: 10px;">
+                            <a href="#" style="display: inline-block; padding: 6px 12px; background-color: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; color: #475569; text-decoration: none; font-size: 11px; font-weight: bold;">WHATSAPP</a>
+                        </td>
+                    </tr>
+                </table>
+            `
         };
         const finalHtml = content
             .replace(/{{name}}/g, previewVars.name)
+            .replace(/{{host_name}}/g, previewVars.host_name)
+            .replace(/{{host_bio}}/g, previewVars.host_bio)
+            .replace(/{{profile_img}}/g, previewVars.profile_img)
+            .replace(/{{social_links}}/g, previewVars.social_links)
             .replace(/{{time}}/g, previewVars.time)
             .replace(/{{meet_link}}/g, previewVars.meet_link);
         
@@ -324,8 +343,17 @@ export default function RemindersPage() {
                                     </button>
                                     <div className="absolute top-full right-0 mt-3 w-80 p-5 bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                                         <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3">Copy this snippet</p>
-                                        <div className="bg-black p-3 rounded-xl border border-white/5 font-mono text-[10px] text-gray-400 break-all select-all leading-relaxed">
-                                            {`<div style="display:flex;align-items:center;gap:12px;padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0"><img src="{{profile_img}}" style="width:48px;height:48px;border-radius:50%"/><div><b style="display:block;color:#0f172a">{{name}}</b><span style="font-size:12px;color:#64748b">Directeur CloseOS</span></div></div>`}
+                                        <div className="bg-black p-3 rounded-xl border border-white/5 font-mono text-[10px] text-gray-400 break-all select-all leading-relaxed whitespace-pre-wrap">
+                                            {`<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #000000; border-radius: 24px; padding: 32px; text-align: center;">
+    <tr>
+        <td align="center">
+            <img src="{{profile_img}}" width="80" height="80" style="width: 80px; height: 80px; border-radius: 20px; object-fit: cover; border: 2px solid #333;" />
+            <h2 style="color: #ffffff; margin: 16px 0 4px 0; font-size: 20px; font-weight: 800; font-family: sans-serif;">{{host_name}}</h2>
+            <p style="color: #64748b; margin: 0 0 16px 0; font-size: 14px; font-family: sans-serif;">{{host_bio}}</p>
+            {{social_links}}
+        </td>
+    </tr>
+</table>`}
                                         </div>
                                         <p className="mt-3 text-[9px] text-gray-500 italic">Injectez ce code dans vos templates pour afficher votre profil.</p>
                                     </div>
@@ -462,7 +490,7 @@ export default function RemindersPage() {
                                                             <div className="group relative">
                                                                 <Info size={14} className="text-blue-500 cursor-help" />
                                                                 <div className="absolute bottom-full right-0 mb-2 w-64 p-3 bg-blue-900 border border-blue-500 rounded-xl text-[10px] text-blue-100 hidden group-hover:block z-10 shadow-2xl">
-                                                                    Variables: {"{{name}}"}, {"{{time}}"}, {"{{meet_link}}"}
+                                                                    Variables: {"{{name}}"}, {"{{time}}"}, {"{{meet_link}}"}, {"{{host_name}}"}, {"{{host_bio}}"}, {"{{profile_img}}"}, {"{{social_links}}"}
                                                                 </div>
                                                             </div>
                                                         </div>

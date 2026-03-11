@@ -56,12 +56,28 @@ export async function POST(request: Request) {
 
         const hostName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Votre hôte';
         const profileImg = user.profile_image || '';
+        const hostBio = user.bio || '';
+        const socialLinks = user.social_links || [];
+        const socialHtml = socialLinks.length > 0
+            ? `<table cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 0 auto;"><tr>${socialLinks.map((s: any) => `
+                <td style="padding: 0 5px;">
+                    <a href="${s.url}" style="display: inline-block; padding: 8px 16px; background-color: #262626; border: 1px solid #333; border-radius: 12px; color: #ffffff; text-decoration: none; font-size: 10px; font-weight: bold; font-family: sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">
+                        ${s.platform}
+                    </a>
+                </td>
+              `).join('')}</tr></table>`
+            : '';
+
+        const guest = event.attendees?.find(a => !a.self);
+        const guestName = guest?.displayName || 'Invité';
 
         const replaceVars = (html: string, name: string) => {
             return html
                 .replace(/{{name}}/g, name)
                 .replace(/{{host_name}}/g, hostName)
+                .replace(/{{host_bio}}/g, hostBio)
                 .replace(/{{profile_img}}/g, profileImg)
+                .replace(/{{social_links}}/g, socialHtml)
                 .replace(/{{time}}/g, meetingTimeStr)
                 .replace(/{{meet_link}}/g, event.hangoutLink!);
         };
