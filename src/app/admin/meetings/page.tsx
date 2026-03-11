@@ -315,11 +315,11 @@ export default function MeetingsPage() {
 
                 <div className="bg-[#111] border border-white/10 rounded-[32px] overflow-hidden">
                     {/* Table Header */}
-                    <div className="grid grid-cols-4 sm:grid-cols-5 p-5 border-b border-white/5 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                    <div className="hidden sm:grid sm:grid-cols-5 p-5 border-b border-white/5 text-[11px] font-black text-gray-500 uppercase tracking-[0.2em]">
                         <div>Date</div>
                         <div>Heure</div>
-                        <div className="col-span-2 sm:col-span-1">Participant</div>
-                        <div className="hidden sm:block">Statut</div>
+                        <div>Participant</div>
+                        <div>Statut</div>
                         <div className="text-right">Actions</div>
                     </div>
 
@@ -350,21 +350,51 @@ export default function MeetingsPage() {
                                 <div 
                                     key={meeting.id} 
                                     onClick={() => openAnalytics(meeting)}
-                                    className="grid grid-cols-4 sm:grid-cols-5 p-4 items-center text-sm hover:bg-white/[0.02] transition-all group cursor-pointer"
+                                    className="flex flex-col sm:grid sm:grid-cols-5 p-5 sm:p-4 items-start sm:items-center text-sm hover:bg-white/[0.02] transition-all group cursor-pointer space-y-4 sm:space-y-0"
                                 >
-                                    <div className="text-gray-400 group-hover:text-white transition-colors">
-                                        {new Date(meeting.meeting_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    {/* Mobile Header: Title and Status */}
+                                    <div className="flex sm:hidden items-center justify-between w-full">
+                                        <div className="font-bold text-base text-white truncate pr-4">
+                                            {meeting.title}
+                                        </div>
+                                        {(() => {
+                                            const status = getStatus(meeting);
+                                            const styles = {
+                                                ongoing: "bg-green-500/10 text-green-500 border-green-500/20",
+                                                past: "bg-white/5 text-gray-500 border-white/10",
+                                                planned: "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                                            };
+                                            const labels = { ongoing: "En cours", past: "Passé", planned: "Prévu" };
+                                            return (
+                                                <span className={`px-2 py-1 ${styles[status]} text-[10px] font-bold rounded border flex items-center gap-1.5`}>
+                                                    {status === 'ongoing' && <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />}
+                                                    {labels[status]}
+                                                </span>
+                                            );
+                                        })()}
                                     </div>
-                                    <div className="text-gray-400 group-hover:text-white transition-colors">
-                                        {meeting.meeting_time.substring(0, 5)}
+
+                                    {/* Date & Time (Card content on mobile, grid columns on desktop) */}
+                                    <div className="flex sm:contents items-center gap-4 text-gray-400 group-hover:text-white transition-colors">
+                                        <div className="flex items-center gap-1.5 sm:block">
+                                            <Calendar size={14} className="sm:hidden text-gray-600" />
+                                            {new Date(meeting.meeting_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                        </div>
+                                        <div className="flex items-center gap-1.5 sm:block">
+                                            <Clock size={14} className="sm:hidden text-gray-600" />
+                                            {meeting.meeting_time.substring(0, 5)}
+                                        </div>
                                     </div>
-                                    <div className="col-span-2 sm:col-span-1 font-bold text-white truncate pr-4">
+
+                                    {/* Desktop Participant Name */}
+                                    <div className="hidden sm:block font-bold text-white truncate pr-4">
                                         {meeting.title}
                                     </div>
+
+                                    {/* Desktop Status Badge */}
                                     <div className="hidden sm:block">
                                         {(() => {
                                             const status = getStatus(meeting);
-
                                             if (status === 'ongoing') {
                                                 return (
                                                     <span className="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded border border-green-500/20 flex items-center gap-1.5 w-fit">
@@ -387,47 +417,53 @@ export default function MeetingsPage() {
                                             }
                                         })()}
                                     </div>
-                                    <div className="text-right text-gray-500 font-medium text-xs flex items-center justify-end gap-3" onClick={(e) => e.stopPropagation()}>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center justify-start sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t border-white/5 sm:border-0" onClick={(e) => e.stopPropagation()}>
                                         <button 
                                             onClick={() => copyLink(meeting.share_id)}
-                                            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-blue-400 font-bold transition-all flex items-center gap-1.5"
+                                            className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-blue-400 font-bold transition-all flex items-center justify-center gap-1.5"
                                         >
                                             <Copy size={12} />
-                                            Lien
+                                            <span className="sm:inline">Lien</span>
                                         </button>
                                         <button 
                                             onClick={() => sendManualReminder(meeting)}
                                             disabled={sendingReminder === meeting.id || !meeting.google_event_id}
-                                            className={`px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-white font-bold transition-all flex items-center gap-1.5 ${(!meeting.google_event_id || sendingReminder === meeting.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            className={`flex-1 sm:flex-none px-3 py-2 sm:py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-white font-bold transition-all flex items-center justify-center gap-1.5 ${(!meeting.google_event_id || sendingReminder === meeting.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
                                             {sendingReminder === meeting.id ? (
                                                 <Loader2 size={12} className="animate-spin" />
                                             ) : (
                                                 <Send size={12} />
                                             )}
-                                            Rappel
+                                            <span className="sm:inline">Rappel</span>
                                         </button>
-                                        <button 
-                                            onClick={() => {
-                                                setEditingMeeting(meeting);
-                                                setEditDate(meeting.meeting_date);
-                                                setEditTime(meeting.meeting_time.substring(0, 5));
-                                                setEditDuration(meeting.duration || 60);
-                                                setIsEditModalOpen(true);
-                                            }}
-                                            className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all"
-                                        >
-                                            <Pencil size={14} />
-                                        </button>
-                                        <button 
-                                            onClick={() => {
-                                                setDeletingMeeting(meeting);
-                                                setIsDeleteModalOpen(true);
-                                            }}
-                                            className="p-2 bg-white/5 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-rose-500 transition-all"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
+                                        <div className="flex items-center gap-2 ml-auto sm:ml-0">
+                                            <button 
+                                                onClick={() => {
+                                                    setEditingMeeting(meeting);
+                                                    setEditDate(meeting.meeting_date);
+                                                    setEditTime(meeting.meeting_time.substring(0, 5));
+                                                    setEditDuration(meeting.duration || 60);
+                                                    setIsEditModalOpen(true);
+                                                }}
+                                                className="p-2.5 sm:p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all"
+                                                title="Modifier"
+                                            >
+                                                <Pencil size={14} />
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    setDeletingMeeting(meeting);
+                                                    setIsDeleteModalOpen(true);
+                                                }}
+                                                className="p-2.5 sm:p-2 bg-white/5 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-rose-500 transition-all"
+                                                title="Supprimer"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
