@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Sparkles, Calendar, Clock, Video, BarChart2, Bell, Plus } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+
 
 export default function MainDashboardPage() {
     const [meetings, setMeetings] = useState<any[]>([]);

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { Camera, Upload, Send, Loader2, User, Clock, Settings, LogOut, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import ImageCropper from './ImageCropper';
 
-export default function DashboardConfigPage() {
+function DashboardConfigContent() {
     const [formLoading, setFormLoading] = useState(false);
     const [initialProfile, setInitialProfile] = useState<any>(null);
 
@@ -460,5 +460,13 @@ export default function DashboardConfigPage() {
                 />
             )}
         </div>
+    );
+}
+
+export default function DashboardConfigPage() {
+    return (
+        <Suspense fallback={<div className="p-10 text-gray-500">Chargement de la configuration...</div>}>
+            <DashboardConfigContent />
+        </Suspense>
     );
 }
