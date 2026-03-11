@@ -211,7 +211,11 @@ export default function RemindersPage() {
             .replace(/{{time}}/g, previewVars.time)
             .replace(/{{meet_link}}/g, previewVars.meet_link);
         
-        setPreviewContent(finalHtml);
+        return finalHtml;
+    };
+
+    const updatePreview = (content: string) => {
+        setPreviewContent(renderPreview(content));
     };
 
     const activeReminder = reminders.find(r => r.id === activeReminderId);
@@ -271,7 +275,37 @@ export default function RemindersPage() {
                             </p>
                         </div>
 
-                        {activeReminder && (
+                        {activeReminderId === 'manual' ? (
+                            <div className="bg-[#111] border border-white/10 rounded-3xl p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {/* Manual Subject */}
+                                <div className="space-y-4">
+                                    <label className="text-sm font-medium text-gray-400 block">Objet du Mail (Manuel)</label>
+                                    <input 
+                                        type="text"
+                                        value={manualSubject}
+                                        onChange={(e) => setManualSubject(e.target.value)}
+                                        placeholder="Rappel : Votre rendez-vous avec {{host_name}}"
+                                        className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    />
+                                </div>
+
+                                {/* Manual HTML Content Input */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium text-gray-400 block">Contenu HTML (Manuel)</label>
+                                    </div>
+                                    <textarea 
+                                        value={manualTemplate}
+                                        onChange={(e) => {
+                                            setManualTemplate(e.target.value);
+                                            updatePreview(e.target.value);
+                                        }}
+                                        spellCheck={false}
+                                        className="w-full h-[400px] px-4 py-3 bg-black border border-white/10 rounded-xl text-sm font-mono text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-y leading-relaxed"
+                                    />
+                                </div>
+                            </div>
+                        ) : activeReminder && (
                             <div className="bg-[#111] border border-white/10 rounded-3xl p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {/* Trigger Logic */}
                                 <div className="space-y-4">
@@ -382,7 +416,7 @@ export default function RemindersPage() {
                                         value={activeReminder.html_template}
                                         onChange={(e) => {
                                             updateReminder(activeReminder.id, { html_template: e.target.value });
-                                            renderPreview(e.target.value);
+                                            updatePreview(e.target.value);
                                         }}
                                         spellCheck={false}
                                         className="w-full h-[400px] px-4 py-3 bg-black border border-white/10 rounded-xl text-sm font-mono text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-y leading-relaxed"
@@ -530,6 +564,40 @@ export default function RemindersPage() {
                         </div>
                     ))}
 
+                    {/* Manual Reminder Card */}
+                    <div className="bg-blue-600/5 border border-blue-500/20 rounded-2xl p-6 flex flex-col justify-between transition-all group hover:bg-blue-600/10 hover:border-blue-500/40 min-h-[220px]">
+                        <div>
+                            <div className="flex items-start justify-between mb-6">
+                                <div className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center text-blue-500">
+                                    <Send size={18} />
+                                </div>
+                                <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500 uppercase">
+                                    Manuel
+                                </div>
+                            </div>
+                            
+                            <div className="mb-6">
+                                <h3 className="font-bold text-white text-[15px] mb-2">Rappel Manuel</h3>
+                                <p className="text-[13px] text-gray-400 leading-relaxed font-medium line-clamp-2">
+                                    Envoyé d'un clic depuis la liste des rendez-vous.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div className="pt-4 flex items-center justify-between border-t border-white/10">
+                            <button 
+                                onClick={() => {
+                                    setActiveReminderId('manual');
+                                    setIsEditorOpen(true);
+                                    updatePreview(manualTemplate);
+                                }}
+                                className="text-blue-500 text-[11px] font-bold hover:text-blue-400 transition-colors uppercase flex items-center gap-1.5"
+                            >
+                                <Settings size={12} /> Configurer
+                            </button>
+                        </div>
+                    </div>
+
                     <button 
                         onClick={addReminder}
                         className="bg-transparent border border-dashed border-white/20 rounded-2xl p-6 flex flex-col items-center justify-center hover:border-blue-500/50 transition-all hover:bg-blue-500/5 min-h-[220px] group"
@@ -545,7 +613,7 @@ export default function RemindersPage() {
     );
 
     const renderConfigPage = () => {
-        if (isEditorOpen && activeReminderId) {
+        if (isEditorOpen && (activeReminderId === 'manual' || activeReminderId)) {
             return renderEditorView();
         }
         return renderAutomationsList();
