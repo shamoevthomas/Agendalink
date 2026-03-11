@@ -286,7 +286,7 @@ export default function RemindersPage() {
                                             <div className="flex flex-wrap gap-6 text-sm text-gray-400">
                                                 <div className="flex items-center gap-2">
                                                     <Clock className="w-4 h-4 text-blue-500" />
-                                                    {startTime.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} • {startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                                    {startTime.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'Europe/Paris' })} • {startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Mail className="w-4 h-4 text-gray-500" />

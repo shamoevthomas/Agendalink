@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
         const startTime = new Date(event.start?.dateTime || event.start?.date || '');
         const guestEmail = event.attendees?.find(a => !a.self)?.email;
-        const meetingTimeStr = startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const meetingTimeStr = startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
 
         // Use the manual template from settings or a default
         const htmlTemplate = user.manual_reminder_template || `

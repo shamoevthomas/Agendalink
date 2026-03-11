@@ -145,7 +145,7 @@ export async function GET(request: Request) {
                                     host_bio: user.bio || '',
                                     profile_img: user.profile_image || '',
                                     social_links: socialHtml,
-                                    time: startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                                    time: startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }),
                                     meet_link: event.hangoutLink,
                                 };
 
